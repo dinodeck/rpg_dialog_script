@@ -24,7 +24,15 @@ require("ParseCore")
 -- In this case the transitions would continue to play
 -- but the progress of the conversation would advance
 -- to the next instruction
+--
+--
+-- ["Why did I bring you<tag:face/> here, you ask? Why to show you my machine!"]
+-- -> on tag "face" run action face(speaker, player)
+-- -> on finish run action script("start_machine")
 
+-- start_state = read until alpha or open bracket or eof
+-- when this happens insert a new child table
+-- and pass it on to read_speaker or read_speaker_table
 
 if not arg[1] then
     print "Need a filename as an argument."
