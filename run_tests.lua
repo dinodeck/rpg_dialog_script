@@ -29,13 +29,29 @@ end
 
 tests =
 {
-    one_box_of_text = function()
-        return false
-    end,
+    {
+        name = "one dialog box",
+        test = function()
+        local testTable =
+            {
+                { text = "Hello" }
+            }
+            return AreTablesEqual(DoParse("[Hello]"), testTable)
+        end
+    },
 
-    one_box_of_text_with_speaker = function()
-        return false
-    end
+    {
+        name = "one dialog box with speaker",
+        test = function()
+            return false
+        end
+    }
 }
 
-DoParse("[Hello]")
+printf = function(...) print(string.format(...)) end
+
+for k, v in ipairs(tests) do
+    printf("TEST: %s", v.name)
+    printf("RESULT: %s", v.test())
+    print("")
+end
