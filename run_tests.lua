@@ -30,7 +30,7 @@ tests =
     {
          name = "Speaker with name and line creates syntax tree representation.",
          test = function()
-             local testTable = {{speaker = "null", text = "Hello" }}
+            local testTable = {{speaker = "null", text = "Hello" }}
             return AreTablesEqual(DoParse("null:Hello"), testTable)
          end
     },
@@ -49,6 +49,13 @@ tests =
         end,
     },
     {
+        name = "Speaker name may not contain newline",
+        test = function()
+            local tree, result = DoParse("nu\nll:Hello")
+            return result.isError == true
+        end,
+    },
+    {
         name = "Speech may contain colon",
         test = function()
             local testTable = {{speaker = "null", text = "Hello Altar: Destroyer of Worlds." }}
@@ -62,15 +69,76 @@ tests =
             return result.isError == true
         end
     },
+    {
+        name = "Speaker mame may contain space",
+        test = function()
+            local testTable = {{speaker = "Mr null", text = "Hello" }}
+            return AreTablesEqual(DoParse("Mr null:Hello"), testTable)
+        end
+    },
+    {
+        name = "Ignore leading newline in speech",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello" }}
+            return AreTablesEqual(DoParse("null:\nHello"), testTable)
+        end
+    },
+    {
+        name = "Ignore leading whitespace in speech",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello" }}
+            return AreTablesEqual(DoParse("null: Hello"), testTable)
+        end
+    },
+    {
+        name = "Speech lines are joined by default",
+        test = function()
+            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            return AreTablesEqual(DoParse("null:It was really dark\nthat's why we didn't see him."), testTable)
+        end
+    },
+    {
+        name = "Extra space before speech line break is ignored",
+        test = function()
+            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            return AreTablesEqual(DoParse("null:It was really dark \nthat's why we didn't see him."), testTable)
+        end
+    },
+    {
+        name = "Extra space after speech line break is ignored",
+        test = function()
+            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            return AreTablesEqual(DoParse("null:It was really dark \n that's why we didn't see him."), testTable)
+        end
+    },
+    {
+        name = "Double space in speech is counted",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello\nGoodbye" }}
+            return AreTablesEqual(DoParse("null:Hello\n\nGoodbye"), testTable)
+        end
+    },
+    {
+        name = "Trailing newlines are removed",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello\nGoodbye" }}
+            return AreTablesEqual(DoParse("null:Hello\n\nGoodbye\n\n\n"), testTable)
+        end
+    },
+    {
+        name = "A script can have multiple speakers",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
+            return AreTablesEqual(DoParse("null:Hello\nbob:Hello"), testTable)
+        end
+    },
     -- {
-    --     name = "Ignore leading whitespace in speech",
+    --     name = "Space between multiple speakers is ignored",
     --     test = function()
-    --         local testTable = {{speaker = "null", text = "null:\nHello" }}
-    --         return AreTablesEqual(DoParse("null:Hello"), testTable)
+    --         local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
+    --         return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
     --     end
     -- }
-
-
     -- {
     --     name = "missing closing brace - simple error",
     --     test = function()

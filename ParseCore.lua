@@ -53,7 +53,7 @@ function MaWhiteSpace:Match()
 
     -- if the next character is non-whitespace, return as success so far
     if self.mContext:PeekAtEnd() or
-       self.mContext:PeekIsWhiteSpace() then
+       not self.mContext:PeekIsWhiteSpace() then
        print("Whitespace sucess")
        self.mState = eMatch.Success
    end
@@ -114,8 +114,24 @@ function MaSpeaker:Match()
 
     local c = self.mContext:Byte()
 
+    if #self.mAccumulator == 0 then
+        local expectedStart = self.mContext.cursor == 1
+        or self.mContext:PrevByte() == "\n"
+
+         if not expectedStart then
+             self.mError = "Looking for speaker but must start on newline or first line of file."
+             self.mState = eMatch.Failure
+         end
+    end
+
     if c == "\n" then
         self.mError = "Looking for speaker name but newline."
+        self.mState = eMatch.Failure
+        return
+    end
+
+    if self.mContext:AtEnd() then
+        self.mError = "Unexpected end of file while execting speaker name."
         self.mState = eMatch.Failure
         return
     end
@@ -176,7 +192,7 @@ function MaSpeechLine:Match()
     local c = self.mContext:Byte()
 
     if #self.mAccumulator > 0 then
-        if c == "\n" or self.mContext:AtEnd()  then
+        if c == '\n' or self.mContext:AtEnd()  then
             self.mState = eMatch.Success
             return
         end
@@ -195,6 +211,37 @@ function MaSpeechLine:Match()
     end
 end
 
+MaEmptyLine = {}
+MaEmptyLine.__index = MaEmptyLine
+function MaEmptyLine:Create(context)
+    local this =
+    {
+        mId = "MaEmptyLine",
+        mName = "Empty Speech Line Matcher",
+        mContext = context,
+        mState = eMatch.Ongoing,
+        mAccumulator = {}
+    }
+
+    setmetatable(this, self)
+    return this
+end
+
+function MaEmptyLine:Match()
+    if self.mState ~= eMatch.Ongoing then
+        return
+    end
+
+    if self.mContext:Byte() == '\n' and self.mContext:NextByte() == '\n' or
+        self.mContext:Byte() == '\n' and self.mContext:PrevByte() == '\n' then
+        self.mState = eMatch.Success
+        return
+    end
+
+    self.mState = eMatch.Failure
+end
+
+
 -- Maybe these blocks have enter and exit functions?
 ReaderActions =
 {
@@ -211,7 +258,10 @@ ReaderActions =
     },
     SPEECH_UNIT =
     {
+        { MaEmptyLine,  "SPEECH_UNIT" },
+        { MaSpeaker,    "SPEECH_UNIT_START" },
         { MaSpeechLine, "SPEECH_UNIT" },
+        { MaWhiteSpace, "SPEECH_UNIT" },
         { MaEnd,        "FINISH"      },
     },
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED",
@@ -234,7 +284,12 @@ function CreateContext(content)
         end,
 
         NextByte = function(self)
-            local cursor = cursor + 1
+            local cursor = self.cursor + 1
+            return self.content:sub(cursor, cursor)
+        end,
+
+        PrevByte = function(self)
+            local cursor = self.cursor - 1
             return self.content:sub(cursor, cursor)
         end,
 
@@ -280,11 +335,45 @@ function CreateContext(content)
             table.insert(current.text, line)
         end,
 
+        AddLineBreak = function(self)
+            self:AddLine('\n')
+        end,
+
         CloseAnyOpenSpeech = function(self)
             local current = self.syntax_tree[#self.syntax_tree]
-            if current then
-                current.text = table.concat(current.text, "\n")
+
+            if not current then return end
+
+            -- Avoid double spaces
+            for k, v in ipairs(current.text) do
+                if v:sub(-1) == " " then
+                    current.text[k] = current.text[k]:sub(1, -2)
+                end
             end
+
+            -- Trim trailing newlines
+            for i = #current.text, 1, -1 do
+                local v = current.text[i]
+                if v == '\n' then
+                    table.remove(current.text)
+                else
+                    break
+                end
+            end
+
+            local buffer = ""
+            for k, v in ipairs(current.text) do
+
+                if buffer == "" or buffer:sub(-1) == '\n' or v:sub(-1) == '\n' then
+                    buffer = buffer .. v
+                else
+                    buffer = buffer .. ' ' .. v
+                end
+
+            end
+
+            current.text = buffer
+
         end
     }
     return this
@@ -370,11 +459,13 @@ function ProcessMatch(match, context)
         context:CloseAnyOpenSpeech()
         local name = match:GetName()
         context:OpenSpeech(name)
-        --printf("name: %s", name)
+        printf("name: [%s]", name)
+    elseif match.mId == "MaEmptyLine" then
+        context:AddLineBreak()
     elseif match.mId == "MaSpeechLine" then
         local line = match:GetLine()
         context:AddLine(line)
-        --printf("line: %s", line)
+        printf("line: [%s]", line)
     elseif match.mId == "MaEnd" then
         context:CloseAnyOpenSpeech()
     end
@@ -417,6 +508,8 @@ function DoParse(data)
             reader = nil
         end
     end
+
+    PrintTable(context.syntax_tree)
 
     return context.syntax_tree, { isError = context.isError }
 end
