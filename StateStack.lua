@@ -11,6 +11,10 @@ function StateStack:Create()
     return this
 end
 
+function StateStack:IsEmpty()
+    return not next(self.mStates)
+end
+
 function StateStack:Push(state)
     table.insert(self.mStates, state)
     state:Enter()
@@ -19,7 +23,6 @@ end
 function StateStack:Pop()
 
     local top = self.mStates[#self.mStates]
-    print("pop called", top)
     table.remove(self.mStates)
     top:Exit()
     return top
@@ -29,23 +32,14 @@ function StateStack:Top()
     return self.mStates[#self.mStates]
 end
 
-function StateStack:Update(dt)
-    -- update them and check input
-    for k = #self.mStates, 1, -1 do
-        local v = self.mStates[k]
-        local continue = v:Update(dt)
-        if not continue then
-            break
-        end
-    end
-
+function StateStack:Step()
     local top = self.mStates[#self.mStates]
 
     if not top then
         return
     end
 
-    top:HandleInput()
+    top:Step()
 end
 
 function StateStack:Render(renderer)
