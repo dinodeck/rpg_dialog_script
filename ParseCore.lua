@@ -1,6 +1,8 @@
 require("StateStack")
 require("HigherOrder")
 
+printf = function(...) print(string.format(...)) end -- <- need a util class
+
 eMatch =
 {
     Success = "Success",

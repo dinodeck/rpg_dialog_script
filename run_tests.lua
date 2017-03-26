@@ -132,13 +132,13 @@ tests =
             return AreTablesEqual(DoParse("null:Hello\nbob:Hello"), testTable)
         end
     },
-    -- {
-    --     name = "Space between multiple speakers is ignored",
-    --     test = function()
-    --         local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
-    --         return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
-    --     end
-    -- }
+    {
+        name = "Space between multiple speakers is ignored",
+        test = function()
+            local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
+            return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
+        end
+    }
     -- {
     --     name = "missing closing brace - simple error",
     --     test = function()

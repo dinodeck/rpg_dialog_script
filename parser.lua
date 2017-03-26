@@ -1,6 +1,7 @@
 #!/opt/local/bin/lua
 
 require("ParseCore")
+require("PrintTable")
 
 --
 -- Simple parser
@@ -59,3 +60,4 @@ f:close()
 local context = DoParse(content)
 
 print("Number of lines ", context.line_number)
+PrintTable(context)
