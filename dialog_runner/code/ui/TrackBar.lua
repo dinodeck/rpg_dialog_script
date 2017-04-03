@@ -62,6 +62,14 @@ function TrackBar:RightTrimmed()
     return self:Right() - self.mTrackTrim
 end
 
+function TrackBar:WidthTrimmed()
+    return self.mWidth - (self.mTrackTrim*2)
+end
+
+function TrackBar:Y()
+    return self.mY
+end
+
 function TrackBar:Render(renderer)
 
     local v = Lerp(self.mValue, 0, 1, self:LeftTrimmed(), self:RightTrimmed())

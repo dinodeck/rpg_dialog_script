@@ -1,8 +1,22 @@
 LoadLibrary('Asset')
 Asset.Run('Dependencies.lua')
+Asset.Run('HigherOrder.lua')
+Asset.Run('ParseCore.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
+gPath = "example_1.txt"
+gIndicator = Sprite:Create()
+gIndicator:SetTexture(Texture.Find("indicator.png"))
+
+gPalette =
+{
+    green = RGB(202, 224, 172),
+    orange = RGB(255, 180, 90),
+    red = RGB(225, 109, 95),
+    pale = RGB(236, 219, 203),
+    blue = RGB(121, 160, 204)
+}
 
 gTrackBar = TrackBar:Create
 {
@@ -27,6 +41,14 @@ TextboxDataLabels =
     LabelValue:Create(gFont, "In Time:", function() return gTextboxData.transition end),
     LabelValue:Create(gFont, "Out Time:", function() return gTextboxData.transition end)
 }
+
+local testTextbox = Textbox.CreateFixed(
+    gRenderer, 0, 0, 256, 64,
+    {
+        font = gFont,
+        text = "Hello",
+        OnFinish = function() end
+    })
 
 
 local trackTime = 5
@@ -77,11 +99,140 @@ local buttonPad = 4
 playButton:SetPosition(0 - buttonPad, gTrackBar:Bottom() - 24)
 stopButton:SetPosition(0 + 16 + buttonPad, gTrackBar:Bottom() - 24)
 
+gIndicator:SetColor(Vector.Create(0.5,0.5,0.5,1))
+
+function TimeForDialog(entry)
+    -- Currently ALL dialogs open
+    -- a new box, that's the assumption
+    local Entry = function(id, time) return { id = id, time = time } end
+    local boxes =
+    {
+        Entry("intro", gTextboxData.transition),
+        Entry("wait", gTextboxData.wait),
+        Entry("outro", gTextboxData.transition),
+    }
+
+    local totalTime = 0
+    for k, v in ipairs(boxes) do
+        totalTime = totalTime + v.time
+    end
+
+    for k, v in ipairs(boxes) do
+        v.time01 = v.time / totalTime
+        print(v.time01)
+    end
+
+    return totalTime, boxes
+end
+
+function TimeForScript(script)
+    local totalTimeSecs = 0
+    local boxedTime = {}
+    for k, v in ipairs(script) do
+        local t, b = TimeForDialog(v)
+        totalTimeSecs = totalTimeSecs + t
+        table.insert(boxedTime, b)
+    end
+    return totalTimeSecs, boxedTime
+end
+
+gConversation = nil
+function LoadConversationScript(script)
+
+    local timeForScript, boxedTime = TimeForScript(script)
+    local str = FormatTimeMS(timeForScript)
+    gConversation =
+    {
+        time = timeForScript,
+        boxedTime = boxedTime
+    }
+    PrintTable(script)
+    PrintTable(boxedTime)
+    print(str)
+end
+
+function RenderConversation()
+    local v = trackingTween:Value()
+    -- go from 1 to 0
+    v = 1 - v
+    local remaningTime = gConversation.time
+    remaningTime = remaningTime * v
+    local timeStr = FormatTimeMSD(remaningTime)
+    gFont:AlignText("center", "bottom")
+    gFont:DrawText2d(gRenderer, 0,-160, timeStr)
+
+    local y = gTrackBar:Y() + 16
+    local x = gTrackBar:LeftTrimmed()
+    local widthChunks = gTrackBar:WidthTrimmed() / #gConversation.boxedTime
+
+    for k, v in ipairs(gConversation.boxedTime) do
+
+        local w = widthChunks
+        DrawEntry(x, y, w, v, gPalette.red)
+        x = x + w
+    end
+end
+
+function DrawEntry(x, y, w, entry, c)
+
+    local subX = x
+    for k, v in ipairs(entry) do
+        local subW = w * v.time01
+        local subC = Vector.Create(c)
+
+
+
+        if v.id == "outro" or v.id == "intro" then
+            subC = subC * 0.75
+        end
+
+        -- Leave a 1 pixel gap at the
+        -- start of each entry
+        if k == 1 then
+            subX = subX + 1
+            subW = subW - 1
+        end
+
+        DrawBoxSprite(subX, y, subW, subC)
+
+        subX = subX + subW
+    end
+end
+
+function DrawBoxSprite(x, y, w, c)
+
+    local c = c or gPalette.blue
+    local timeBox = Texture.Find("time_box.png")
+    local textureWidth = timeBox:GetWidth()
+    local s = Sprite.Create()
+    local pixelWidth = w/textureWidth
+    s:SetScale(pixelWidth, 1)
+
+    -- Align from left
+    local alignedX = x + (w*0.5)
+
+    s:SetPosition(alignedX, y)
+    s:SetTexture(timeBox)
+    s:SetColor(c)
+    gRenderer:DrawSprite(s)
+end
+
+
+
+local errorLines = nil
+local errorLastLine = -1
 function update()
 
     if playButton:IsOn() then
         trackingTween:Update()
         gTrackBar:SetValue01(trackingTween:Value())
+    end
+
+
+    if gConversation then
+        RenderConversation(gRenderer,
+                           gConversation)
+
     end
 
     gTrackBar:Render(gRenderer)
@@ -98,13 +249,50 @@ function update()
     stopButton:Render(gRenderer)
     playButton:Render(gRenderer)
 
+
+    testTextbox:Update(GetDeltaTime())
+    testTextbox:Render(gRenderer)
+
+
     local labelY = 128
     for k, v in ipairs(TextboxDataLabels) do
         v:SetPosition(screenW + 100, labelY - ((k-1)*16))
         v:Render(gRenderer)
     end
 
-    local path = "none"
+    if Keyboard.JustPressed(KEY_L) then
+        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_1.txt", "rb")
+        local content = f:read("*all")
+        f:close()
+        local script, result = DoParse(content)
+
+        if not result.isError then
+            gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
+            PrintTable(script)
+            errorLines = nil
+            errorLastLine = -1
+            LoadConversationScript(script)
+        else
+            gIndicator:SetColor(Vector.Create(0.95,0.05,0.05,1))
+            errorLines = result.errorLines or "unknown error"
+            errorLastLine = result.lastLine
+            PrintTable(result)
+        end
+    end
+
+    if errorLastLine > -1 then
+        local x = -256
+        -- Print Errors
+        gFont:DrawText2d(gRenderer, x,0,"Error maybe line " .. tostring(errorLastLine))
+        for k, v in ipairs(errorLines) do
+            gFont:DrawText2d(gRenderer, x,k*-16, v)
+        end
+    end
+
+    gRenderer:DrawSprite(gIndicator)
+    local loadX = screenW + 32
+    local loadY = 156
+    gIndicator:SetPosition(loadX - 10, loadY - 5)
     gFont:AlignText("left", "top")
-    gFont:DrawText2d(gRenderer, screenW + 32, 156, "PATH: " .. path)
+    gFont:DrawText2d(gRenderer, loadX, loadY, "PATH: " .. gPath)
 end

@@ -27,6 +27,7 @@ Apply({
         "ModalButton.lua",
         "TrackBar.lua",
         "LabelValue.lua",
-        "Util.lua"
+        "Util.lua",
+        "Textbox.lua"
     },
     function(v) Asset.Run(v) end)

@@ -1,2 +1,4 @@
 Bob:
 Hello
+Sam:
+Hello

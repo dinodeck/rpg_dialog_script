@@ -53,6 +53,19 @@ manifest =
         {
             path = "code/ui/TrackBar.lua"
         },
+        ['Textbox.lua'] =
+        {
+            path = "code/Textbox.lua"
+        },
+        -- Let's include the stuff for parsing the conversations
+        ['HigherOrder.lua'] =
+        {
+            path = "parse/HigherOrder.lua"
+        },
+        ['ParseCore.lua'] =
+        {
+            path = "parse/ParseCore.lua"
+        },
 
     },
     textures =
@@ -60,6 +73,10 @@ manifest =
         ['gradient_panel.png'] =
         {
             path = "art/gradient_panel.png",
+        },
+        ['continue_caret.png'] =
+        {
+            path = "art/continue_caret.png",
         },
         ['play.png'] =
         {
@@ -94,6 +111,16 @@ manifest =
         ['default_font.png'] =
         {
             path = "art/font/default_font.png",
+            scale = "pixelart"
+        },
+        ['indicator.png'] =
+        {
+            path = "indicator.png",
+            scale = "pixelart"
+        },
+        ['time_box.png'] =
+        {
+            path = "time_box.png",
             scale = "pixelart"
         },
     },

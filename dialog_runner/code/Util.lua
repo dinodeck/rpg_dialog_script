@@ -1,4 +1,23 @@
 
+function FormatTimeMS(seconds)
+    local minutes = math.floor(seconds / 60)
+    local seconds = seconds % 60
+    return string.format("%01d:%02d", minutes, seconds)
+end
+
+function FormatTimeMSD(seconds)
+    local minutes = math.floor(seconds / 60)
+    local seconds = seconds % 60
+    local decimalPlaces = math.floor( (seconds - math.floor(seconds)) * 100 + 0.5 )
+    return string.format("%01d:%02d:%02d", minutes, seconds, decimalPlaces)
+end
+
+function RGB(r, g, b, a)
+    local a = a or 255
+    return Vector.Create(r/255,g/255,b/255,a/255)
+end
+
+
 function GenerateUVs(tileWidth, tileHeight, texture)
 
     -- This is the table we'll fill with uvs and return.

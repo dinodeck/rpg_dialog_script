@@ -11,20 +11,17 @@ function Textbox:Create(params)
 
     local this =
     {
-        -- mText = params.text, Removing this
+        mFont = params.font,
         mChunks = params.text,
         mChunkIndex = 1,
         mContinueMark = Sprite.Create(),
         mTime = 0,
-        mTextScale = params.textScale or 1,
         mPanel = Panel:Create(params.panelArgs),
         mSize = params.size,
         mBounds = params.textbounds,
         mAppearTween = Tween:Create(0, 1, 0.3, Tween.Linear),
         mWrap = params.wrap or -1,
-        mChildren = params.children or {},
         mSelectionMenu = params.selectionMenu,
-        mStack = params.stack,
         mDoClickCallback = false,
         mOnFinish = params.OnFinish or function() end
     }
@@ -42,11 +39,106 @@ function Textbox:Create(params)
     return this
 end
 
+function Textbox.CreateFixed(renderer, x, y, width, height, params)
+    params = params or {}
+    local choices = params.choices
+    local text = params.text
+
+    local padding = 10
+    local titlePadY = params.titlePadY or 10
+    local panelTileSize = 3
+
+    --
+    -- This a fixed dialog so the wrapping value is calculated here.
+    --
+    local wrap = width - padding
+    local boundsTop = padding
+    local boundsLeft = padding
+    local boundsBottom = padding
+
+
+    local selectionMenu = nil
+    if choices then
+        -- options and callback
+        selectionMenu = Selection:Create
+        {
+            data = choices.options,
+            OnSelection = choices.OnSelection,
+            displayRows = #choices.options,
+            columns = 1,
+        }
+        boundsBottom = boundsBottom - padding*0.5
+    end
+
+
+    --
+    -- Section text into box size chunks.
+    --
+    local faceHeight = math.ceil(renderer:MeasureText(text):Y())
+    local start, finish = renderer:NextLine(text, 1, wrap)
+
+    local boundsHeight = height - (boundsTop + boundsBottom)
+    local currentHeight = faceHeight
+
+    local chunks = {{string.sub(text, start, finish)}}
+    while finish < #text do
+        start, finish = renderer:NextLine(text, finish, wrap)
+
+        -- If we're going to overflow
+        if (currentHeight + faceHeight) > boundsHeight then
+            -- make a new entry
+            currentHeight = 0
+            table.insert(chunks, {string.sub(text, start, finish)})
+        else
+            table.insert(chunks[#chunks], string.sub(text, start, finish))
+        end
+        currentHeight = currentHeight + faceHeight
+    end
+
+    -- Make each textbox be represented by one string.
+    for k, v in ipairs(chunks) do
+        chunks[k] = table.concat(v)
+    end
+
+    local textbox = Textbox:Create
+    {
+        font = params.font,
+        text = chunks,
+        textScale = textScale,
+        size =
+        {
+            left    = x - width / 2,
+            right   = x + width / 2,
+            top     = y + height / 2,
+            bottom  = y - height / 2
+        },
+        textbounds =
+        {
+            left = boundsLeft,
+            right = -padding,
+            top = -boundsTop,
+            bottom = boundsBottom
+        },
+        panelArgs =
+        {
+            texture = Texture.Find("gradient_panel.png"),
+            size = panelTileSize,
+        },
+        children = children,
+        wrap = wrap,
+        selectionMenu = selectionMenu,
+        OnFinish = params.OnFinish,
+        stack = self,
+    }
+
+    return textbox
+end
+
 function Textbox:Update(dt)
     self.mTime = self.mTime + dt
     self.mAppearTween:Update(dt)
     if self:IsDead() then
-        self.mStack:Pop()
+        self:Exit()
     end
     return true
 end
@@ -104,8 +196,7 @@ end
 
 function Textbox:Render(renderer)
 
-    local font = gGame.Font.default
-
+    local font = self.mFont
     local scale = self.mAppearTween:Value()
 
     -- renderer:ScaleText(self.mTextScale * scale)
@@ -158,21 +249,4 @@ function Textbox:Render(renderer)
         renderer:DrawSprite(self.mContinueMark)
     end
 
-    for k, v in ipairs(self.mChildren) do
-        if v.type == "text" then
-            font:DrawText2d(
-                renderer,
-                textLeft + (v.x * scale),
-                textTop + (v.y * scale),
-                v.text,
-                Vector.Create(1,1,1,1)
-            )
-        elseif v.type == "sprite" then
-            v.sprite:SetPosition(
-                left + (v.x * scale),
-                top + (v.y * scale))
-            v.sprite:SetScale(scale, scale)
-            renderer:DrawSprite(v.sprite)
-        end
-    end
 end

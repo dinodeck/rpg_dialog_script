@@ -1,5 +1,8 @@
 -- require("StateStack")
+
+if not Asset then
 require("HigherOrder")
+end
 
 printf = function(...) print(string.format(...)) end -- <- need a util class
 
@@ -449,11 +452,19 @@ function Reader:Step()
     end
 end
 
-function Reader:PrintError()
+function Reader:GetError()
+
+    local lines = {}
+
     for k, v in ipairs(self.mMatchList) do
-        printf("Possible error: %s", v.mError)
+        if v.mError ~= nil and v.mError ~= "" then
+            table.insert(lines, "Possible error: " .. v.mError)
+        end
     end
+
+    return lines
 end
+
 
 function ProcessMatch(match, context)
     --print(match.mId)
@@ -505,7 +516,7 @@ function DoParse(data)
 
         elseif reader:ReadFailed() then
             print("Reader failed")
-            reader:PrintError()
+            context.errorLines = reader:GetError()
             context.isError = true
             reader = nil
         end
@@ -513,5 +524,10 @@ function DoParse(data)
 
     PrintTable(context.syntax_tree)
 
-    return context.syntax_tree, { isError = context.isError }
+    return context.syntax_tree,
+    {
+        isError = context.isError,
+        errorLines = context.errorLines,
+        lastLine = context.line_number
+    }
 end
