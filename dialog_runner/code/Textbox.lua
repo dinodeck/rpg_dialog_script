@@ -12,6 +12,7 @@ Textbox = {}
 Textbox.__index = Textbox
 function Textbox:Create(params)
 
+    print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
     params = params or {}
 
     if type(params.text) == "string" then
@@ -61,6 +62,9 @@ end
 
 
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
+
+    print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
+
     params = params or {}
     local choices = params.choices
     local text = params.text
@@ -148,6 +152,7 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
         wrap = wrap,
         selectionMenu = selectionMenu,
         OnFinish = params.OnFinish,
+        OnWaitToAdvance = params.OnWaitToAdvance,
         stack = self,
     }
 
@@ -164,13 +169,14 @@ function Textbox:EnterWriteState()
 end
 
 function Textbox:EnterWaitState()
+    print("Entered wait state")
     self.mState = eTextboxState.Wait
     self:mOnWaitToAdvance()
 end
 
 function Textbox:EnterOutroState()
     self.mState = eTextboxState.Outro
-    this.mAppearTween = Tween:Create(1, 0, self.mOutroDuration, Tween.Linear)
+    self.mAppearTween = Tween:Create(1, 0, self.mOutroDuration, Tween.Linear)
 end
 
 function Textbox:Update(dt)
@@ -190,6 +196,7 @@ function Textbox:Update(dt)
         self.mWriteTween:Update(dt)
 
         if self.mWriteTween:IsFinished() then
+            print("Finished write tween")
             self:EnterWaitState()
         end
 

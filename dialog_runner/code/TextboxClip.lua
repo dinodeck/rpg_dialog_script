@@ -18,14 +18,14 @@ function TextboxClip:Create(params)
     --
     -- Trample all over any currently OnWaitForAdvance callback
     --
-    params.OnWaitToAdvance = this.OnWaitToAdvance
-    this.mTextbox = params.textbox or Textbox:Create(params)
 
+    print('advance callback' .. tostring(params.OnWaitToAdvance))
+    this.mTextbox = params.textbox or Textbox:Create(params)
+    this.mTextbox.mOnWaitToAdvance = function() this:OnWaitToAdvance() end
     return this
 end
 
 function TextboxClip.CreateFixed(renderer, x, y, width, height, params)
-    print(renderer, x, y, width, height, tostring(params))
     local textbox = Textbox.CreateFixed(renderer, x, y, width, height, params)
     return TextboxClip:Create({textbox = textbox})
 end
@@ -47,6 +47,7 @@ function TextboxClip:Jump01()
 end
 
 function TextboxClip:OnWaitToAdvance()
+    print("called advance")
     self.mTextbox:Advance()
     -- might want to tidy up the 0-1 ness here, in case we've pushed over.
 end

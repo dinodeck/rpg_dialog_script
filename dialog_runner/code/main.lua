@@ -254,9 +254,9 @@ function LoadConversationScript(script)
         boxedTime = boxedTime,
         sequence = CreateConversationSequence(script)
     }
-    PrintTable(script)
-    PrintTable(boxedTime)
-    print(FormatTimeMS(timeForScript))
+    -- PrintTable(script)
+    -- PrintTable(boxedTime)
+    -- print(FormatTimeMS(timeForScript))
 end
 
 function RenderConversation()
