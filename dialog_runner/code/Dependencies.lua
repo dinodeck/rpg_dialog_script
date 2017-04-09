@@ -28,6 +28,7 @@ Apply({
         "TrackBar.lua",
         "LabelValue.lua",
         "Util.lua",
-        "Textbox.lua"
+        "Textbox.lua",
+        "TextboxClip.lua"
     },
     function(v) Asset.Run(v) end)

@@ -9,7 +9,13 @@ function ModalButton:Create(params)
         mInFocus = false,
         OnGainFocus = params.OnGainFocus or function() end,
         OnLoseFocus = params.OnLoseFocus or function() end,
-        OnClick = params.OnClick or function() end,
+        OnClick = params.OnClick or function(b)
+                                        if b.mEngaged then
+                                            b:TurnOff()
+                                        else
+                                            b:TurnOn()
+                                        end
+                                    end,
         mEngaged = false
     }
 
@@ -39,8 +45,6 @@ function ModalButton:HandleUpdate()
         end
 
         if Mouse.JustPressed(MOUSE_BUTTON_LEFT) then
-            self.mEngaged = not self.mEngaged
-            self:UpdateButtonTexture()
             self:OnClick()
         end
     else

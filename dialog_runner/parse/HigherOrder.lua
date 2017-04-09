@@ -10,3 +10,11 @@ function Any(t, predicate, iter)
 
     return false
 end
+
+function Keys(t)
+    local keys = {}
+    for k, v in pairs(t) do
+        table.insert(keys, k)
+    end
+    return keys
+end

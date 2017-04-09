@@ -66,6 +66,10 @@ manifest =
         {
             path = "parse/ParseCore.lua"
         },
+        ['TextboxClip.lua'] =
+        {
+            path = "code/TextboxClip.lua"
+        },
 
     },
     textures =

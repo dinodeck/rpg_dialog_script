@@ -1,4 +1,13 @@
 
+local eTextboxState =
+{
+    Intro = "Intro",
+    Write = "Write",
+    Wait = "Wait",
+    Outro = "Outro"
+}
+
+
 Textbox = {}
 Textbox.__index = Textbox
 function Textbox:Create(params)
@@ -19,13 +28,24 @@ function Textbox:Create(params)
         mPanel = Panel:Create(params.panelArgs),
         mSize = params.size,
         mBounds = params.textbounds,
-        mAppearTween = Tween:Create(0, 1, 0.3, Tween.Linear),
         mWrap = params.wrap or -1,
         mSelectionMenu = params.selectionMenu,
         mDoClickCallback = false,
-        mOnFinish = params.OnFinish or function() end
+        mOnFinish = params.OnFinish or function() end,
+
+        --
+        -- Called every user input is expected to advance the text.
+        --
+        mOnWaitToAdvance = params.OnWaitToAdvance or function() end,
+
+        mState = eTextboxState.Intro,
+        mWriteTween = nil,
+        mIntroDuration = 0.3,
+        mWriteDuration = 1, -- might differ for each chunk
+        mOutroDuration = 0.2
     }
 
+    this.mAppearTween = Tween:Create(0, 1, this.mIntroDuration, Tween.Linear),
     this.mContinueMark:SetTexture(Texture.Find("continue_caret.png"))
 
     -- Calculate center point from mSize
@@ -38,6 +58,7 @@ function Textbox:Create(params)
     setmetatable(this, self)
     return this
 end
+
 
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
     params = params or {}
@@ -69,7 +90,6 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
         }
         boundsBottom = boundsBottom - padding*0.5
     end
-
 
     --
     -- Section text into box size chunks.
@@ -134,22 +154,81 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     return textbox
 end
 
+function Textbox:SeenAllChunks()
+    return self.mChunkIndex >= #self.mChunks
+end
+
+function Textbox:EnterWriteState()
+    self.mState = eTextboxState.Write
+    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
+end
+
+function Textbox:EnterWaitState()
+    self.mState = eTextboxState.Wait
+    self:mOnWaitToAdvance()
+end
+
+function Textbox:EnterOutroState()
+    self.mState = eTextboxState.Outro
+    this.mAppearTween = Tween:Create(1, 0, self.mOutroDuration, Tween.Linear)
+end
+
 function Textbox:Update(dt)
+
     self.mTime = self.mTime + dt
-    self.mAppearTween:Update(dt)
-    if self:IsDead() then
-        self:Exit()
+
+    if self.mState == eTextboxState.Wait then
+        return
+    elseif self.mState == eTextboxState.Intro then
+        self.mAppearTween:Update(dt)
+
+        if self.mAppearTween:IsFinished() then
+            self:EnterWriteState()
+        end
+
+    elseif self.mState == eTextboxState.Write then
+        self.mWriteTween:Update(dt)
+
+        if self.mWriteTween:IsFinished() then
+            self:EnterWaitState()
+        end
+
+    elseif self.mState == eTextboxState.Outro then
+        self.mAppearTween:Update(dt)
+
+        if self:IsDead() then
+            self:Exit()
+        end
     end
+
     return true
+end
+
+function Textbox:Advance()
+    if self.mState ~= eTextboxState.Wait then
+        return
+    end
+
+    -- Should this increment be in the else part of the if statement?
+    self.mChunkIndex = self.mChunkIndex + 1
+    if self:SeenAllChunks() then
+        self:EnterOutroState()
+    else
+        self:EnterWriteState()
+    end
+
 end
 
 
 function Textbox:HandleInput()
 
-    if Keyboard.JustPressed(KEY_SPACE) then
-        self:OnClick()
-    elseif self.mSelectionMenu then
-        self.mSelectionMenu:HandleInput()
+    -- Needs making better. Cancel transitions etc
+    if self.mState == eTextboxState.Wait then
+        if Keyboard.JustPressed(KEY_SPACE) then
+            self:OnClick()
+        elseif self.mSelectionMenu then
+            self.mSelectionMenu:HandleInput()
+        end
     end
 
 end
@@ -174,18 +253,20 @@ function Textbox:OnClick()
         self.mDoClickCallback = true
     end
 
-    if self.mChunkIndex >= #self.mChunks then
+    if self:SeenAllChunks() then
         --
         -- If the dialog is appearing or dissapearing
         -- ignore interaction
+        --
+        -- !!This skipping ahead functionality is currently not supported.
         --
         if not (self.mAppearTween:IsFinished()
            and self.mAppearTween:Value() == 1) then
             return
         end
-        self.mAppearTween = Tween:Create(1, 0, 0.2, Tween.Linear)
+        self:EnterOutroState()
     else
-        self.mChunkIndex = self.mChunkIndex + 1
+        self:Advance()
     end
 end
 

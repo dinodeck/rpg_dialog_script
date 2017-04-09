@@ -72,7 +72,9 @@ playButton = ModalButton:Create
         self.mBaseSprite:SetColor(Vector.Create(1, 1, 1, 1))
     end,
     OnClick = function(self)
+        if not gConversation then return end
         stopButton:TurnOff()
+        self:TurnOn()
     end
 }
 
@@ -136,19 +138,125 @@ function TimeForScript(script)
     return totalTimeSecs, boxedTime
 end
 
+FixedSequence = {}
+FixedSequence.__index = FixedSequence
+function FixedSequence:Create()
+    local this =
+    {
+        mTimeline = {},
+        mClipIndex = 1,
+        mRuntime = 0, -- tracks how long the sequence has run for
+    }
+
+    setmetatable(this, self)
+    return this
+end
+
+function FixedSequence:JumpTo01(value)
+
+    -- Need to find the clip, then how much we're into the clip
+    -- and tell it to jump to that point
+
+end
+
+function FixedSequence:Duration()
+    -- There's not reason this can't be cached
+    return self:CalcDuration()
+end
+
+
+function FixedSequence:CalcDuration()
+    local duration = 0
+    for k, v in ipairs(self.mTimeline) do
+        duration = duration + v:Duration()
+    end
+    return duration
+end
+
+--
+-- Each clip needs:
+--     Update
+--     Render
+--     JumpTo01
+--     Duration
+--
+function FixedSequence:AddClip(clip)
+    table.insert(self.mTimeline, clip)
+end
+
+function FixedSequence:Update(dt)
+
+    local dt = dt or GetDeltaTime()
+    self.mRuntime = self.mRuntime + dt
+    self.mClipIndex = self:RuntimeToClipIndex()
+
+    local clip = self.mTimeline[self.mClipIndex]
+
+    clip:Update(dt)
+
+end
+
+function FixedSequence:RuntimeToClipIndex()
+
+    -- Takes a time in seconds and transforms it into a clip index
+    local time = 0
+    for k, v in ipairs(self.mTimeline) do
+        if time > self.mRuntime then
+            return k
+        end
+        time = time + v:Duration()
+    end
+
+    -- We're overtime which is fine, we just need to return the last clip
+    return #self.mTimeline
+
+    -- Better way would be to get the current clip index, get it's start
+    -- time and subtract that
+end
+
+function FixedSequence:Render(renderer)
+    local clip = self.mTimeline[self.mClipIndex]
+    clip:Render(renderer)
+end
+
+
+function CreateConversationSequence(script)
+
+    local sequence = FixedSequence:Create()
+
+    for k, v in ipairs(script) do
+        -- 1. Create a textbox
+        local textbox = TextboxClip.CreateFixed(gRenderer,
+            0, 0, 256, 64,
+            {
+                font = gFont,
+                text = v.text,
+            })
+        sequence:AddClip(textbox)
+    end
+
+    return sequence
+end
+
 gConversation = nil
 function LoadConversationScript(script)
 
     local timeForScript, boxedTime = TimeForScript(script)
-    local str = FormatTimeMS(timeForScript)
+    local speakerMap = {}
+    for k, v in ipairs(script) do
+        speakerMap[v.speaker] = true
+    end
+    local speakerList = Keys(speakerMap)
+
     gConversation =
     {
         time = timeForScript,
-        boxedTime = boxedTime
+        boxedTime = boxedTime,
+        sequence = CreateConversationSequence(script)
     }
     PrintTable(script)
     PrintTable(boxedTime)
-    print(str)
+    print(FormatTimeMS(timeForScript))
 end
 
 function RenderConversation()
@@ -171,6 +279,8 @@ function RenderConversation()
         DrawEntry(x, y, w, v, gPalette.red)
         x = x + w
     end
+
+    gConversation.sequence:Render(gRenderer)
 end
 
 function DrawEntry(x, y, w, entry, c)
@@ -226,13 +336,12 @@ function update()
     if playButton:IsOn() then
         trackingTween:Update()
         gTrackBar:SetValue01(trackingTween:Value())
+        gConversation.sequence:Update()
     end
 
 
     if gConversation then
-        RenderConversation(gRenderer,
-                           gConversation)
-
+        RenderConversation(gRenderer, gConversation)
     end
 
     gTrackBar:Render(gRenderer)
@@ -248,11 +357,6 @@ function update()
     playButton:HandleUpdate()
     stopButton:Render(gRenderer)
     playButton:Render(gRenderer)
-
-
-    testTextbox:Update(GetDeltaTime())
-    testTextbox:Render(gRenderer)
-
 
     local labelY = 128
     for k, v in ipairs(TextboxDataLabels) do
