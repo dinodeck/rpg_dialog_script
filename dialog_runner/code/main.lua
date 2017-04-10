@@ -92,6 +92,11 @@ stopButton = ModalButton:Create
         playButton:TurnOff()
         trackingTween = Tween:Create(0, 1, trackTime)
         gTrackBar:SetValue01(0)
+
+        if gConversation then
+            PrintTable(gConversation)
+            gConversation.sequence:JumpTo01(0)
+        end
     end
 }
 
@@ -156,6 +161,30 @@ function FixedSequence:JumpTo01(value)
 
     -- Need to find the clip, then how much we're into the clip
     -- and tell it to jump to that point
+    self.mRuntime = self:CalcDuration() * value
+
+    local time = 0
+    local findActiveClip = true
+    for k, v in ipairs(self.mTimeline) do
+        local prevTime = time
+        time = time + v:Duration()
+
+
+        if time > self.mRuntime then
+
+            if findActiveClip then
+                -- We're in this clip
+                local currentClip01 = Lerp(self.mRuntime, prevTime, time, 0, 1)
+                v:JumpTo01(currentClip01)
+            else
+                v:JumpTo01(1)
+            end
+        else
+            v:JumpTo01(0)
+        end
+
+
+    end
 
 end
 
@@ -190,6 +219,7 @@ function FixedSequence:Update(dt)
     self.mRuntime = self.mRuntime + dt
     self.mClipIndex = self:RuntimeToClipIndex()
 
+    print(self.mClipIndex, tostring(clip))
     local clip = self.mTimeline[self.mClipIndex]
 
     clip:Update(dt)
@@ -201,10 +231,11 @@ function FixedSequence:RuntimeToClipIndex()
     -- Takes a time in seconds and transforms it into a clip index
     local time = 0
     for k, v in ipairs(self.mTimeline) do
+        time = time + v:Duration()
         if time > self.mRuntime then
             return k
         end
-        time = time + v:Duration()
+
     end
 
     -- We're overtime which is fine, we just need to return the last clip

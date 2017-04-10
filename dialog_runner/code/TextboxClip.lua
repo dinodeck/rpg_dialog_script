@@ -8,26 +8,44 @@
 TextboxClip = {}
 TextboxClip.__index = TextboxClip
 function TextboxClip:Create(params)
+
+
     local this =
     {
-        mWaitDuration = 1
+        mWaitDuration = 1,
+        mCreationParams = ShallowClone(params)
     }
+
+
 
 
     setmetatable(this, self)
     --
     -- Trample all over any currently OnWaitForAdvance callback
     --
+    this:CreateTextbox()
 
-    print('advance callback' .. tostring(params.OnWaitToAdvance))
-    this.mTextbox = params.textbox or Textbox:Create(params)
-    this.mTextbox.mOnWaitToAdvance = function() this:OnWaitToAdvance() end
     return this
 end
 
 function TextboxClip.CreateFixed(renderer, x, y, width, height, params)
-    local textbox = Textbox.CreateFixed(renderer, x, y, width, height, params)
-    return TextboxClip:Create({textbox = textbox})
+    return TextboxClip:Create
+    {
+        isFixed = true,
+        params = {renderer, x, y, width, height, params}
+    }
+end
+
+function TextboxClip:CreateTextbox()
+    local params = self.mCreationParams
+    if params.isFixed then
+       local textbox = Textbox.CreateFixed(unpack(params.params))
+       params = {textbox = textbox }
+    end
+
+    print('advance callback' .. tostring(params.OnWaitToAdvance))
+    self.mTextbox = params.textbox or Textbox:Create(params)
+    self.mTextbox.mOnWaitToAdvance = function() self:OnWaitToAdvance() end
 end
 
 function TextboxClip:Update(dt)
@@ -42,7 +60,13 @@ function TextboxClip:Duration()
     return self.mTextbox.mIntroDuration + self.mTextbox.mOutroDuration + self.mWaitDuration
 end
 
-function TextboxClip:Jump01()
+function TextboxClip:JumpTo01(value)
+
+    if value == 0 then
+        self:CreateTextbox()
+    else
+        print("Write this properly!")
+    end
 
 end
 
