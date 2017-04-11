@@ -73,8 +73,13 @@ playButton = ModalButton:Create
     end,
     OnClick = function(self)
         if not gConversation then return end
-        stopButton:TurnOff()
-        self:TurnOn()
+
+        if self.mEngaged then
+            self:TurnOff()
+        else
+            stopButton:TurnOff()
+            self:TurnOn()
+        end
     end
 }
 
