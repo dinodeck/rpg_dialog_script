@@ -100,7 +100,6 @@ stopButton = ModalButton:Create
         gTrackBar:SetValue01(0)
 
         if gConversation then
-            PrintTable(gConversation)
             gConversation.sequence:JumpTo01(0)
         end
     end
@@ -272,10 +271,9 @@ function LoadConversationScript(script)
         time = time,
         boxedTime = boxedTime
     }
-
     -- PrintTable(script)
-    -- PrintTable(boxedTime)
-    -- print(FormatTimeMS(timeForScript))
+    PrintTable(boxedTime)
+    print(FormatTimeMS(time))
 end
 
 function RenderConversation()
@@ -346,6 +344,15 @@ function DrawBoxSprite(x, y, w, c)
     gRenderer:DrawSprite(s)
 end
 
+function SetupTrackbar()
+
+    -- It would be good to get a tracktime here in 0 to 1 then reapply after
+
+    trackTime = gConversation.time
+    trackingTween = Tween:Create(0, 1, trackTime)
+
+end
+
 
 
 local errorLines = nil
@@ -395,11 +402,12 @@ function update()
             errorLines = nil
             errorLastLine = -1
             LoadConversationScript(script)
+            SetupTrackbar()
         else
             gIndicator:SetColor(Vector.Create(0.95,0.05,0.05,1))
             errorLines = result.errorLines or "unknown error"
             errorLastLine = result.lastLine
-            PrintTable(result)
+            -- PrintTable(result)
         end
     end
 

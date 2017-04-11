@@ -69,7 +69,6 @@ function TextboxClip:GenerateBoxedTime()
 
     local totalTime = 0
     for k, v in ipairs(box) do
-        PrintTable(v)
         totalTime = totalTime + v.time
     end
 

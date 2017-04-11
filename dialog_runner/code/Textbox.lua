@@ -56,6 +56,8 @@ function Textbox:Create(params)
     this.mWidth = this.mSize.right - this.mSize.left
     this.mHeight = this.mSize.top - this.mSize.bottom
 
+    print("DEBUG-Start", self.mTime or 0)
+
     setmetatable(this, self)
     return this
 end
@@ -164,18 +166,19 @@ function Textbox:SeenAllChunks()
 end
 
 function Textbox:EnterWriteState()
-    print("Entering write state: ", self.mWriteDuration)
+    print("Entering write state: ", self.mTime or 0)
     self.mState = eTextboxState.Write
     self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
 end
 
 function Textbox:EnterWaitState()
-    print("Entered wait state")
+    print("Entered wait state ", self.mTime or 0)
     self.mState = eTextboxState.Wait
     self:mOnWaitToAdvance()
 end
 
 function Textbox:EnterOutroState()
+    print("Entered out state ", self.mTime or 0)
     self.mState = eTextboxState.Outro
     self.mAppearTween = Tween:Create(1, 0, self.mOutroDuration, Tween.Linear)
 end
