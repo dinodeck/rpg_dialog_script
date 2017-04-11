@@ -29,6 +29,7 @@ gTrackBar = TrackBar:Create
     thumbTexture = Texture.Find("track.png")
 }
 
+-- This data isn't fed into the setup yet
 gTextboxData =
 {
     wait = 1,
@@ -113,41 +114,6 @@ stopButton:SetPosition(0 + 16 + buttonPad, gTrackBar:Bottom() - 24)
 
 gIndicator:SetColor(Vector.Create(0.5,0.5,0.5,1))
 
-function TimeForDialog(entry)
-    -- Currently ALL dialogs open
-    -- a new box, that's the assumption
-    local Entry = function(id, time) return { id = id, time = time } end
-    local boxes =
-    {
-        Entry("intro", gTextboxData.transition),
-        Entry("wait", gTextboxData.wait),
-        Entry("outro", gTextboxData.transition),
-    }
-
-    local totalTime = 0
-    for k, v in ipairs(boxes) do
-        totalTime = totalTime + v.time
-    end
-
-    for k, v in ipairs(boxes) do
-        v.time01 = v.time / totalTime
-        print(v.time01)
-    end
-
-    return totalTime, boxes
-end
-
-function TimeForScript(script)
-    local totalTimeSecs = 0
-    local boxedTime = {}
-    for k, v in ipairs(script) do
-        local t, b = TimeForDialog(v)
-        totalTimeSecs = totalTimeSecs + t
-        table.insert(boxedTime, b)
-    end
-    return totalTimeSecs, boxedTime
-end
-
 FixedSequence = {}
 FixedSequence.__index = FixedSequence
 function FixedSequence:Create()
@@ -162,11 +128,24 @@ function FixedSequence:Create()
     return this
 end
 
+function FixedSequence:GenerateBoxedTime()
+
+    local box = {}
+
+    for k, v in ipairs(self.mTimeline) do
+        table.insert(box, v:GenerateBoxedTime())
+    end
+
+    return box
+
+end
+
 function FixedSequence:JumpTo01(value)
 
     -- Need to find the clip, then how much we're into the clip
     -- and tell it to jump to that point
     self.mRuntime = self:CalcDuration() * value
+    self.mClipIndex = self:RuntimeToClipIndex()
 
     local time = 0
     local findActiveClip = true
@@ -181,11 +160,13 @@ function FixedSequence:JumpTo01(value)
                 -- We're in this clip
                 local currentClip01 = Lerp(self.mRuntime, prevTime, time, 0, 1)
                 v:JumpTo01(currentClip01)
+                findActiveClip = false
             else
-                v:JumpTo01(1)
+                v:JumpTo01(0)
             end
         else
-            v:JumpTo01(0)
+
+            v:JumpTo01(1)
         end
 
 
@@ -223,8 +204,6 @@ function FixedSequence:Update(dt)
     local dt = dt or GetDeltaTime()
     self.mRuntime = self.mRuntime + dt
     self.mClipIndex = self:RuntimeToClipIndex()
-
-    print(self.mClipIndex, tostring(clip))
     local clip = self.mTimeline[self.mClipIndex]
 
     clip:Update(dt)
@@ -277,19 +256,23 @@ end
 gConversation = nil
 function LoadConversationScript(script)
 
-    local timeForScript, boxedTime = TimeForScript(script)
+    -- local timeForScript, boxedTime = TimeForScript(script)
     local speakerMap = {}
     for k, v in ipairs(script) do
         speakerMap[v.speaker] = true
     end
     local speakerList = Keys(speakerMap)
 
+    local sequence = CreateConversationSequence(script)
+    local time = sequence:Duration()
+    local boxedTime = sequence:GenerateBoxedTime()
     gConversation =
     {
-        time = timeForScript,
-        boxedTime = boxedTime,
-        sequence = CreateConversationSequence(script)
+        sequence = sequence,
+        time = time,
+        boxedTime = boxedTime
     }
+
     -- PrintTable(script)
     -- PrintTable(boxedTime)
     -- print(FormatTimeMS(timeForScript))

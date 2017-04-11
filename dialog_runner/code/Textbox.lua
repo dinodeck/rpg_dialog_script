@@ -164,6 +164,7 @@ function Textbox:SeenAllChunks()
 end
 
 function Textbox:EnterWriteState()
+    print("Entering write state: ", self.mWriteDuration)
     self.mState = eTextboxState.Write
     self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
 end

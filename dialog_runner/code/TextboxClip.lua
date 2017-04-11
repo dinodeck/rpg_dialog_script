@@ -12,7 +12,6 @@ function TextboxClip:Create(params)
 
     local this =
     {
-        mWaitDuration = 1,
         mCreationParams = ShallowClone(params)
     }
 
@@ -57,7 +56,28 @@ function TextboxClip:Render(renderer)
 end
 
 function TextboxClip:Duration()
-    return self.mTextbox.mIntroDuration + self.mTextbox.mOutroDuration + self.mWaitDuration
+    return self.mTextbox.mIntroDuration + self.mTextbox.mOutroDuration + self.mTextbox.mWriteDuration
+end
+
+function TextboxClip:GenerateBoxedTime()
+    local Entry = function(id, time) return { id = id, time = time } end
+
+    local box = {}
+    table.insert(box, Entry("intro", self.mTextbox.mIntroDuration))
+    table.insert(box, Entry("wait", self.mTextbox.mWriteDuration))
+    table.insert(box, Entry("outro", self.mTextbox.mOutroDuration))
+
+    local totalTime = 0
+    for k, v in ipairs(box) do
+        PrintTable(v)
+        totalTime = totalTime + v.time
+    end
+
+    for k, v in ipairs(box) do
+        v.time01 = v.time / totalTime
+    end
+
+    return box
 end
 
 function TextboxClip:JumpTo01(value)
