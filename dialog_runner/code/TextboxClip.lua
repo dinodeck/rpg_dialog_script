@@ -56,7 +56,7 @@ function TextboxClip:Render(renderer)
 end
 
 function TextboxClip:Duration()
-    return self.mTextbox.mIntroDuration + self.mTextbox.mOutroDuration + self.mTextbox.mWriteDuration
+    return self.mTextbox:Duration()
 end
 
 function TextboxClip:GenerateBoxedTime()
@@ -85,6 +85,7 @@ function TextboxClip:JumpTo01(value)
         self:CreateTextbox()
     else
         print("Write this properly!")
+        self.mTextbox:JumpTo01(value)
     end
 
 end

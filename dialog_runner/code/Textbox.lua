@@ -62,6 +62,41 @@ function Textbox:Create(params)
     return this
 end
 
+function Textbox:Duration()
+    return self.mIntroDuration + self.mWriteDuration + self.mOutroDuration
+end
+
+function Textbox:JumpTo01(value)
+
+    local duration = self:Duration()
+    local timePassed = Clamp(duration * value, 0, duration)
+
+    local writeThreshold = self.mIntroDuration + self.mWriteDuration
+    local outThreshold = writeThreshold + self.mOutroDuration
+
+    -- Are we in the first tween?
+    if timePassed < self.mIntroDuration then
+        self.mState = eTextboxState.Intro
+        self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
+        local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
+        self.mAppearTween:SetValue01(tween01)
+    -- Are we in the middle bit:
+    elseif timePassed < writeThreshold then
+        self.mState = eTextboxState.Write
+        self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
+        self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
+        local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
+        self.mWriteTween:SetValue01(tween01)
+    else
+        -- the out tween
+        self.mState = eTextboxState.Outro
+        self.mWriteTween = Tween:Create(1, 1, self.mWriteDuration, Tween.Linear)
+        self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
+        local tween10 = Lerp(timePassed, outThreshold, duration, 1, 0)
+        self.mAppearTween(tween10)
+    end
+end
+
 
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
 

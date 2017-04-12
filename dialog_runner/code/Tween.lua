@@ -191,6 +191,10 @@ function Tween:Update(elapsedTime)
     end
 end
 
+function Tween:SetValue01(v)
+	self.timePassed = Lerp(v, 0, 1, self.startValue, self:FinishValue())
+	self:Update(0)
+end
 
 
 --

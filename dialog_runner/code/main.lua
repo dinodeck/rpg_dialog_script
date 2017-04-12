@@ -152,7 +152,6 @@ function FixedSequence:JumpTo01(value)
         local prevTime = time
         time = time + v:Duration()
 
-
         if time > self.mRuntime then
 
             if findActiveClip then
@@ -164,11 +163,8 @@ function FixedSequence:JumpTo01(value)
                 v:JumpTo01(0)
             end
         else
-
             v:JumpTo01(1)
         end
-
-
     end
 
 end
@@ -353,7 +349,45 @@ function SetupTrackbar()
 
 end
 
+function JumpTrackBar(v)
+    trackingTween:SetValue01(v)
+end
 
+function handleInput()
+    if Keyboard.JustPressed(KEY_L) then
+        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_1.txt", "rb")
+        local content = f:read("*all")
+        f:close()
+        local script, result = DoParse(content)
+
+        if not result.isError then
+            gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
+            PrintTable(script)
+            errorLines = nil
+            errorLastLine = -1
+            LoadConversationScript(script)
+            SetupTrackbar()
+        else
+            gIndicator:SetColor(Vector.Create(0.95,0.05,0.05,1))
+            errorLines = result.errorLines or "unknown error"
+            errorLastLine = result.lastLine
+            -- PrintTable(result)
+        end
+    end
+
+    local function jump(value)
+        if gConversation then
+            stopButton:OnClick()
+            gConversation.sequence:JumpTo01(value)
+            JumpTrackBar(value)
+            gTrackBar:SetValue01(value)
+        end
+    end
+
+    if Keyboard.JustPressed(KEY_1) then
+        jump(0.05)
+    end
+end
 
 local errorLines = nil
 local errorLastLine = -1
@@ -390,26 +424,7 @@ function update()
         v:Render(gRenderer)
     end
 
-    if Keyboard.JustPressed(KEY_L) then
-        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_1.txt", "rb")
-        local content = f:read("*all")
-        f:close()
-        local script, result = DoParse(content)
-
-        if not result.isError then
-            gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
-            PrintTable(script)
-            errorLines = nil
-            errorLastLine = -1
-            LoadConversationScript(script)
-            SetupTrackbar()
-        else
-            gIndicator:SetColor(Vector.Create(0.95,0.05,0.05,1))
-            errorLines = result.errorLines or "unknown error"
-            errorLastLine = result.lastLine
-            -- PrintTable(result)
-        end
-    end
+    handleInput()
 
     if errorLastLine > -1 then
         local x = -256
