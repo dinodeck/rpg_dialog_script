@@ -74,12 +74,18 @@ function Textbox:JumpTo01(value)
     local writeThreshold = self.mIntroDuration + self.mWriteDuration
     local outThreshold = writeThreshold + self.mOutroDuration
 
+    print("value: " .. tostring(value) .. " timePassed: " .. tostring(timePassed))
+    print("intro: " .. self.mIntroDuration)
+
     -- Are we in the first tween?
     if timePassed < self.mIntroDuration then
+        print("in intro")
         self.mState = eTextboxState.Intro
         self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
         local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
+        print("intro tween01: " .. tostring(tween01))
         self.mAppearTween:SetValue01(tween01)
+        print("appear tween: " .. tostring(self.mAppearTween:Value()))
     -- Are we in the middle bit:
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
