@@ -29,6 +29,8 @@ Apply({
         "LabelValue.lua",
         "Util.lua",
         "Textbox.lua",
-        "TextboxClip.lua"
+        "TextboxClip.lua",
+        "Bound.lua",
+        "TypedText.lua"
     },
     function(v) Asset.Run(v) end)

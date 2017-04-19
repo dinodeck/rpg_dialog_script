@@ -15,9 +15,6 @@ function TextboxClip:Create(params)
         mCreationParams = ShallowClone(params)
     }
 
-
-
-
     setmetatable(this, self)
     --
     -- Trample all over any currently OnWaitForAdvance callback

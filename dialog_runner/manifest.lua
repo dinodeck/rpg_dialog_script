@@ -70,6 +70,14 @@ manifest =
         {
             path = "code/TextboxClip.lua"
         },
+        ['Bound.lua'] =
+        {
+            path = "code/ui/Bound.lua"
+        },
+        ['TypedText.lua'] =
+        {
+            path = "code/ui/TypedText.lua"
+        },
 
     },
     textures =

@@ -56,6 +56,14 @@ function Textbox:Create(params)
     this.mWidth = this.mSize.right - this.mSize.left
     this.mHeight = this.mSize.top - this.mSize.bottom
 
+    this.mTypedText = TypedText:Create
+    {
+        x = this.mX,
+        y = this.mY,
+        width = this.mWidth,
+        height = this.mHeight
+    }
+
     print("DEBUG-Start", self.mTime or 0)
 
     setmetatable(this, self)
@@ -72,20 +80,14 @@ function Textbox:JumpTo01(value)
     local timePassed = Clamp(duration * value, 0, duration)
 
     local writeThreshold = self.mIntroDuration + self.mWriteDuration
-    local outThreshold = writeThreshold + self.mOutroDuration
-
-    print("value: " .. tostring(value) .. " timePassed: " .. tostring(timePassed))
-    print("intro: " .. self.mIntroDuration)
+    -- local outThreshold = writeThreshold + self.mOutroDuration
 
     -- Are we in the first tween?
     if timePassed < self.mIntroDuration then
-        print("in intro")
         self.mState = eTextboxState.Intro
         self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
         local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
-        print("intro tween01: " .. tostring(tween01))
         self.mAppearTween:SetValue01(tween01)
-        print("appear tween: " .. tostring(self.mAppearTween:Value()))
     -- Are we in the middle bit:
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
@@ -98,8 +100,8 @@ function Textbox:JumpTo01(value)
         self.mState = eTextboxState.Outro
         self.mWriteTween = Tween:Create(1, 1, self.mWriteDuration, Tween.Linear)
         self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
-        local tween10 = Lerp(timePassed, outThreshold, duration, 1, 0)
-        self.mAppearTween(tween10)
+        local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
+        self.mAppearTween:SetValue01(tween10)
     end
 end
 
