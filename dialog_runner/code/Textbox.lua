@@ -7,6 +7,11 @@ local eTextboxState =
     Outro = "Outro"
 }
 
+--
+-- Todo
+--
+-- - Restore support for selectionboxes
+--
 
 Textbox = {}
 Textbox.__index = Textbox
@@ -27,11 +32,9 @@ function Textbox:Create(params)
         mContinueMark = Sprite.Create(),
         mTime = 0,
         mPanel = Panel:Create(params.panelArgs),
-        mSize = params.size,
-        mBounds = params.textbounds,
-        mWrap = params.wrap or -1,
-        mSelectionMenu = params.selectionMenu,
-        mDoClickCallback = false,
+        mBounds = params.size,
+        mTextAreaOffset = params.textAreaOffset,   -- might not be needed, review later
+        mTextArea = params.textArea,
         mOnFinish = params.OnFinish or function() end,
 
         --
@@ -49,19 +52,17 @@ function Textbox:Create(params)
     this.mAppearTween = Tween:Create(0, 1, this.mIntroDuration, Tween.Linear),
     this.mContinueMark:SetTexture(Texture.Find("continue_caret.png"))
 
-    -- Calculate center point from mSize
+    -- Calculate center point from mBounds
     -- We can use this to scale.
-    this.mX = (this.mSize.right + this.mSize.left) / 2
-    this.mY = (this.mSize.top + this.mSize.bottom) / 2
-    this.mWidth = this.mSize.right - this.mSize.left
-    this.mHeight = this.mSize.top - this.mSize.bottom
+    -- We can get this directly from the rect now
+    this.mX = (this.mBounds:Right() + this.mBounds:Left()) / 2
+    this.mY = (this.mBounds:Top() + this.mBounds:Bottom()) / 2
+    this.mWidth = this.mBounds:Right() - this.mBounds:Left()
+    this.mHeight = this.mBounds:Top() - this.mBounds:Bottom()
 
     this.mTypedText = TypedText:Create
     {
-        x = this.mX,
-        y = this.mY,
-        width = this.mWidth,
-        height = this.mHeight
+        bounds = this.mBounds, -- this is of course wrong, we want the inner bounds
     }
 
     print("DEBUG-Start", self.mTime or 0)
@@ -70,83 +71,27 @@ function Textbox:Create(params)
     return this
 end
 
-function Textbox:Duration()
-    return self.mIntroDuration + self.mWriteDuration + self.mOutroDuration
-end
-
-function Textbox:JumpTo01(value)
-
-    local duration = self:Duration()
-    local timePassed = Clamp(duration * value, 0, duration)
-
-    local writeThreshold = self.mIntroDuration + self.mWriteDuration
-    -- local outThreshold = writeThreshold + self.mOutroDuration
-
-    -- Are we in the first tween?
-    if timePassed < self.mIntroDuration then
-        self.mState = eTextboxState.Intro
-        self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
-        local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
-        self.mAppearTween:SetValue01(tween01)
-    -- Are we in the middle bit:
-    elseif timePassed < writeThreshold then
-        self.mState = eTextboxState.Write
-        self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
-        self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
-        local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
-        self.mWriteTween:SetValue01(tween01)
-    else
-        -- the out tween
-        self.mState = eTextboxState.Outro
-        self.mWriteTween = Tween:Create(1, 1, self.mWriteDuration, Tween.Linear)
-        self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
-        local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
-        self.mAppearTween:SetValue01(tween10)
-    end
-end
-
-
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
 
     print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
 
     params = params or {}
-    local choices = params.choices
     local text = params.text
-
     local padding = 10
-    local titlePadY = params.titlePadY or 10
-    local panelTileSize = 3
-
-    --
-    -- This a fixed dialog so the wrapping value is calculated here.
-    --
-    local wrap = width - padding
-    local boundsTop = padding
-    local boundsLeft = padding
-    local boundsBottom = padding
-
-
-    local selectionMenu = nil
-    if choices then
-        -- options and callback
-        selectionMenu = Selection:Create
-        {
-            data = choices.options,
-            OnSelection = choices.OnSelection,
-            displayRows = #choices.options,
-            columns = 1,
-        }
-        boundsBottom = boundsBottom - padding*0.5
-    end
+    local bounds = Rect.CreateFromCenter(x, y, width, height)
+    --  Text area work better this way
+    local textAreaOffset = Vector.Create(25, 0)
+    local textArea = bounds:Clone()
+    textArea:Shrink(padding)
 
     --
     -- Section text into box size chunks.
     --
-    local faceHeight = math.ceil(renderer:MeasureText(text):Y())
+    local wrap = textArea:Width()
+    local faceHeight = math.ceil(params.font:MeasureText(text):Y()) -- <- this is wrong
     local start, finish = renderer:NextLine(text, 1, wrap)
 
-    local boundsHeight = height - (boundsTop + boundsBottom)
+    local boundsHeight = textArea:Height()
     local currentHeight = faceHeight
 
     local chunks = {{string.sub(text, start, finish)}}
@@ -173,28 +118,15 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     {
         font = params.font,
         text = chunks,
-        textScale = textScale,
-        size =
-        {
-            left    = x - width / 2,
-            right   = x + width / 2,
-            top     = y + height / 2,
-            bottom  = y - height / 2
-        },
-        textbounds =
-        {
-            left = boundsLeft,
-            right = -padding,
-            top = -boundsTop,
-            bottom = boundsBottom
-        },
+        size = bounds,
+        textAreaOffset = textAreaOffset,
+        textArea = textArea,
         panelArgs =
         {
             texture = Texture.Find("gradient_panel.png"),
-            size = panelTileSize,
+            size = 3,
         },
         children = children,
-        wrap = wrap,
         selectionMenu = selectionMenu,
         OnFinish = params.OnFinish,
         OnWaitToAdvance = params.OnWaitToAdvance,
@@ -202,6 +134,40 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     }
 
     return textbox
+end
+
+function Textbox:Duration()
+    return self.mIntroDuration + self.mWriteDuration + self.mOutroDuration
+end
+
+function Textbox:JumpTo01(value)
+
+    local duration = self:Duration()
+    local timePassed = Clamp(duration * value, 0, duration)
+
+    local writeThreshold = self.mIntroDuration + self.mWriteDuration
+
+    -- Are we in the first tween?
+    if timePassed < self.mIntroDuration then
+        self.mState = eTextboxState.Intro
+        self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
+        local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
+        self.mAppearTween:SetValue01(tween01)
+    -- Are we in the middle bit:
+    elseif timePassed < writeThreshold then
+        self.mState = eTextboxState.Write
+        self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
+        self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
+        local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
+        self.mWriteTween:SetValue01(tween01)
+    else
+        -- the out tween
+        self.mState = eTextboxState.Outro
+        self.mWriteTween = Tween:Create(1, 1, self.mWriteDuration, Tween.Linear)
+        self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
+        local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
+        self.mAppearTween:SetValue01(tween10)
+    end
 end
 
 function Textbox:SeenAllChunks()
@@ -292,20 +258,12 @@ function Textbox:Enter()
 end
 
 function Textbox:Exit()
-    if self.mDoClickCallback then
-        self.mSelectionMenu:OnClick()
-    end
-
     if self.mOnFinish then
         self.mOnFinish()
     end
 end
 
 function Textbox:OnClick()
-
-    if self.mSelectionMenu then
-        self.mDoClickCallback = true
-    end
 
     if self:SeenAllChunks() then
         --
@@ -334,22 +292,13 @@ function Textbox:Render(renderer)
     local font = self.mFont
     local scale = self.mAppearTween:Value()
 
-    -- renderer:ScaleText(self.mTextScale * scale)
+
     font:AlignText("left", "top")
     -- Draw the scale panel
-    self.mPanel:CenterPosition(
-        self.mX,
-        self.mY,
-        self.mWidth * scale,
-        self.mHeight * scale)
+    self.mBounds:Scale01(scale)
+    self.mPanel:FitRect(self.mBounds)
 
     self.mPanel:Render(renderer)
-
-    local left = self.mX - (self.mWidth/2 * scale)
-    local textLeft = left + (self.mBounds.left * scale)
-    local top = self.mY + (self.mHeight/2 * scale)
-    local textTop = top + (self.mBounds.top * scale)
-    local bottom = self.mY - (self.mHeight/2 * scale)
 
     -- Bitmap fonts can't scale
     -- So until box is full size, don't draw any text.
@@ -359,22 +308,11 @@ function Textbox:Render(renderer)
 
     font:DrawText2d(
         renderer,
-        textLeft,
-        textTop,
+        self.mTextAreaOffset:X() + self.mTextArea:Left(),
+        self.mTextAreaOffset:Y() + self.mTextArea:Top(),
         self.mChunks[self.mChunkIndex],
         Vector.Create(1,1,1,1),
-        self.mWrap * scale)
-
-    if self.mSelectionMenu then
-        font:AlignText("left", "center")
-        local menuX = textLeft
-        local menuY = bottom + self.mSelectionMenu:GetHeight()
-        menuY = menuY + self.mBounds.bottom
-        self.mSelectionMenu.mX = menuX
-        self.mSelectionMenu.mY = menuY
-        self.mSelectionMenu.mScale = scale
-        self.mSelectionMenu:Render(renderer)
-    end
+        self.mTextArea:Width())
 
     if self.mChunkIndex < #self.mChunks then
         -- There are more chunks t come.

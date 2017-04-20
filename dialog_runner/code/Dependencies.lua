@@ -30,7 +30,7 @@ Apply({
         "Util.lua",
         "Textbox.lua",
         "TextboxClip.lua",
-        "Bound.lua",
+        "Rect.lua",
         "TypedText.lua"
     },
     function(v) Asset.Run(v) end)

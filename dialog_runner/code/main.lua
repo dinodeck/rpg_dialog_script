@@ -394,59 +394,67 @@ local errorLines = nil
 local errorLastLine = -1
 function update()
 
-    local tt = TypedText:Create({renderer = gRenderer})
-    tt:DrawBounds()
+    -- local tt = TypedText:Create({renderer = gRenderer})
+
+    -- local b = tt.mBounds
+
+    -- -- b:Scale01(0.3)
+    -- tt:DrawBounds()
+    -- b:Shrink(10)
+    -- tt:DrawBounds()
+    -- gRenderer:AlignText("center", "center")
+    -- gRenderer:DrawText2d(b:Center(), "Hello")
 
     -- local b1 = tt.mBounds
     -- local b = Bound.FromLimits(b1:Left(), b1:Bottom(), b1:Right(), b1:Top())
     -- b:Render(gRenderer)
 
-    -- if playButton:IsOn() then
-    --     trackingTween:Update()
-    --     gTrackBar:SetValue01(trackingTween:Value())
-    --     gConversation.sequence:Update()
-    -- end
+    if playButton:IsOn() then
+        trackingTween:Update()
+        gTrackBar:SetValue01(trackingTween:Value())
+        gConversation.sequence:Update()
+    end
 
 
-    -- if gConversation then
-    --     RenderConversation(gRenderer, gConversation)
-    -- end
+    if gConversation then
+        RenderConversation(gRenderer, gConversation)
+    end
 
-    -- gTrackBar:Render(gRenderer)
+    gTrackBar:Render(gRenderer)
 
-    -- gFont:AlignText("left", "top")
-    -- gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner")
+    gFont:AlignText("left", "top")
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner")
 
-    -- gFont:AlignText("center", "top")
-    -- gFont:DrawText2d(gRenderer, gTrackBar:LeftTrimmed(), tracklabelY, "0")
-    -- gFont:DrawText2d(gRenderer, gTrackBar:RightTrimmed(), tracklabelY, "1")
+    gFont:AlignText("center", "top")
+    gFont:DrawText2d(gRenderer, gTrackBar:LeftTrimmed(), tracklabelY, "0")
+    gFont:DrawText2d(gRenderer, gTrackBar:RightTrimmed(), tracklabelY, "1")
 
-    -- stopButton:HandleUpdate()
-    -- playButton:HandleUpdate()
-    -- stopButton:Render(gRenderer)
-    -- playButton:Render(gRenderer)
+    stopButton:HandleUpdate()
+    playButton:HandleUpdate()
+    stopButton:Render(gRenderer)
+    playButton:Render(gRenderer)
 
-    -- local labelY = 128
-    -- for k, v in ipairs(TextboxDataLabels) do
-    --     v:SetPosition(screenW + 100, labelY - ((k-1)*16))
-    --     v:Render(gRenderer)
-    -- end
+    local labelY = 128
+    for k, v in ipairs(TextboxDataLabels) do
+        v:SetPosition(screenW + 100, labelY - ((k-1)*16))
+        v:Render(gRenderer)
+    end
 
-    -- handleInput()
+    handleInput()
 
-    -- if errorLastLine > -1 then
-    --     local x = -256
-    --     -- Print Errors
-    --     gFont:DrawText2d(gRenderer, x,0,"Error maybe line " .. tostring(errorLastLine))
-    --     for k, v in ipairs(errorLines) do
-    --         gFont:DrawText2d(gRenderer, x,k*-16, v)
-    --     end
-    -- end
+    if errorLastLine > -1 then
+        local x = -256
+        -- Print Errors
+        gFont:DrawText2d(gRenderer, x,0,"Error maybe line " .. tostring(errorLastLine))
+        for k, v in ipairs(errorLines) do
+            gFont:DrawText2d(gRenderer, x,k*-16, v)
+        end
+    end
 
-    -- gRenderer:DrawSprite(gIndicator)
-    -- local loadX = screenW + 32
-    -- local loadY = 156
-    -- gIndicator:SetPosition(loadX - 10, loadY - 5)
-    -- gFont:AlignText("left", "top")
-    -- gFont:DrawText2d(gRenderer, loadX, loadY, "PATH: " .. gPath)
+    gRenderer:DrawSprite(gIndicator)
+    local loadX = screenW + 32
+    local loadY = 156
+    gIndicator:SetPosition(loadX - 10, loadY - 5)
+    gFont:AlignText("left", "top")
+    gFont:DrawText2d(gRenderer, loadX, loadY, "PATH: " .. gPath)
 end

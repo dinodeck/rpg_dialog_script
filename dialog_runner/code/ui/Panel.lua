@@ -111,6 +111,10 @@ function Panel:CenterPosition(x, y, width, height)
                          x + hWidth, y - hHeight)
 end
 
+function Panel:FitRect(rect)
+    return self:Position(rect:Left(), rect:Top(), rect:Right(), rect:Bottom())
+end
+
 function Panel:Render(renderer)
     for k, v in ipairs(self.mTiles) do
         renderer:DrawSprite(v)

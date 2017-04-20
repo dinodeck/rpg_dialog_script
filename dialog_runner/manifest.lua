@@ -70,9 +70,9 @@ manifest =
         {
             path = "code/TextboxClip.lua"
         },
-        ['Bound.lua'] =
+        ['Rect.lua'] =
         {
-            path = "code/ui/Bound.lua"
+            path = "code/ui/Rect.lua"
         },
         ['TypedText.lua'] =
         {

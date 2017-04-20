@@ -23,7 +23,7 @@ function TypedText:Create(params)
     {
         mFont = params.font,
         mRenderer = params.renderer,
-        mBounds = params.bounds or Bound:Create(),
+        mBounds = params.bounds or Rect:Create(),
 
         mPageList = params.text,
         mPageIndex = 1,
