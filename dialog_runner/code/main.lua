@@ -284,11 +284,27 @@ function RenderConversation()
 
     local y = gTrackBar:Y() + 16
     local x = gTrackBar:LeftTrimmed()
-    local widthChunks = gTrackBar:WidthTrimmed() / #gConversation.boxedTime
+
+    --
+    -- Working out for boxes as a 0..1 of the full sequence
+    --
+    local totalTime = 0
+    local boxDurationList = {}
+    for k, box in ipairs(gConversation.boxedTime) do
+        boxDurationList[k] = 0
+        for _, entry in ipairs(box) do
+            totalTime = totalTime + entry.time
+            boxDurationList[k] = boxDurationList[k] + entry.time
+        end
+    end
+
+    print("TOTAL TIME: " .. tostring(totalTime))
+    PrintTable(boxDurationList)
 
     for k, v in ipairs(gConversation.boxedTime) do
 
-        local w = widthChunks
+        local boxDuration01 = boxDurationList[k] / totalTime
+        local w = gTrackBar:WidthTrimmed() * boxDuration01
         DrawEntry(x, y, w, v, gPalette.red)
         x = x + w
     end
