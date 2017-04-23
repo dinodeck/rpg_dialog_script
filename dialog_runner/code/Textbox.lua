@@ -31,9 +31,6 @@ function Textbox:Create(params)
 
     local this =
     {
-        mFont = params.font,
-        mChunks = params.text,
-        mChunkIndex = 1,
         mContinueMark = Sprite.Create(),
         mTime = 0,
         mPanel = Panel:Create(params.panelArgs),
@@ -48,9 +45,8 @@ function Textbox:Create(params)
         mOnWaitToAdvance = params.OnWaitToAdvance or function() end,
 
         mState = eTextboxState.Intro,
-        mWriteTween = nil,
+        -- mWriteTween = nil,
         mIntroDuration = 0.3,
-        mWriteDuration = 1, -- might differ for each chunk
         mOutroDuration = 0.2
     }
 
@@ -62,7 +58,8 @@ function Textbox:Create(params)
     {
         font = params.font,
         bounds = this.mTextArea,
-        text = params.text
+        text = params.text,
+        writeDuration = params.writeDuration or 1, -- this will change per page later <wait>
     }
 
     print("DEBUG-Start", self.mTime or 0)
@@ -116,7 +113,7 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
 end
 
 function Textbox:Duration()
-    return self.mIntroDuration + self.mWriteDuration + self.mOutroDuration
+    return self.mIntroDuration + self.mTypedText:Duration() + self.mOutroDuration
 end
 
 function Textbox:JumpTo01(value)
@@ -124,7 +121,7 @@ function Textbox:JumpTo01(value)
     local duration = self:Duration()
     local timePassed = Clamp(duration * value, 0, duration)
 
-    local writeThreshold = self.mIntroDuration + self.mWriteDuration
+    local writeThreshold = self.mIntroDuration + self.mTypedText:Duration()
 
     -- Are we in the first tween?
     if timePassed < self.mIntroDuration then
@@ -136,13 +133,15 @@ function Textbox:JumpTo01(value)
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
         self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
-        self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
+        -- self.mWriteTween = Tween:Create(0, 1, self.mTypedText:Duration(), Tween.Linear)
         local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
-        self.mWriteTween:SetValue01(tween01)
+        -- self.mWriteTween:SetValue01(tween01)
+        self.mTypedText:JumpTo01(tween01)
     else
         -- the out tween
         self.mState = eTextboxState.Outro
-        self.mWriteTween = Tween:Create(1, 1, self.mWriteDuration, Tween.Linear)
+        --self.mWriteTween = Tween:Create(1, 1, self.mTypedText:Duration(), Tween.Linear)
+        self.mTypedText:JumpTo01(1)
         self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
         local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
         self.mAppearTween:SetValue01(tween10)
@@ -153,7 +152,8 @@ end
 function Textbox:EnterWriteState()
     print("Entering write state: ", self.mTime or 0)
     self.mState = eTextboxState.Write
-    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration, Tween.Linear)
+    -- self.mWriteTween = Tween:Create(0, 1, self.mTypedText:Duration(), Tween.Linear)
+    self.mTypedText:JumpTo01(0)
 end
 
 function Textbox:EnterWaitState()
@@ -182,9 +182,11 @@ function Textbox:Update(dt)
         end
 
     elseif self.mState == eTextboxState.Write then
-        self.mWriteTween:Update(dt)
+        --self.mWriteTween:Update(dt)
+        self.mTypedText:Update(dt)
 
-        if self.mWriteTween:IsFinished() then
+        --if self.mWriteTween:IsFinished() then
+        if self.mTypedText:SeenAllPages() then
             print("Finished write tween")
             self:EnterWaitState()
         end
@@ -265,15 +267,9 @@ end
 
 function Textbox:Render(renderer)
 
-    local font = self.mFont
     local scale = self.mAppearTween:Value()
-
-
-    font:AlignText("left", "top")
-    -- Draw the scale panel
     self.mBounds:Scale01(scale)
     self.mPanel:FitRect(self.mBounds)
-
     self.mPanel:Render(renderer)
 
     -- Bitmap fonts can't scale
@@ -286,9 +282,9 @@ function Textbox:Render(renderer)
 
     if self.mTypedText:IsWaitingToAdvance() then
         -- There are more chunks t come.
-        local offset = 12 + math.floor(math.sin(self.mTime*10)) * scale
+        local offset = 6 + math.floor(math.sin(self.mTime*10)) * scale
         self.mContinueMark:SetScale(scale, scale)
-        self.mContinueMark:SetPosition(self.mTextArea:Left(), self.mTextArea:Bottom() + offset)
+        self.mContinueMark:SetPosition(self.mTextArea:Right() - 4, self.mTextArea:Bottom() + offset)
         renderer:DrawSprite(self.mContinueMark)
     end
 

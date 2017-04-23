@@ -62,7 +62,7 @@ function TextboxClip:GenerateBoxedTime()
 
     local box = {}
     table.insert(box, Entry("intro", self.mTextbox.mIntroDuration))
-    table.insert(box, Entry("wait", self.mTextbox.mWriteDuration))
+    table.insert(box, Entry("wait", self.mTextbox.mTypedText:Duration()))
     table.insert(box, Entry("outro", self.mTextbox.mOutroDuration))
 
     local totalTime = 0

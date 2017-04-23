@@ -24,9 +24,10 @@ function TypedText:Create(params)
         mFont = params.font,
         mRenderer = params.renderer,
         mBounds = params.bounds or Rect:Create(),
-
         mPageList = params.text,
         mPageIndex = 1,
+        mWriteDuration = params.writeDuration or 1,
+        mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
     }
     setmetatable(this, self)
     return this
@@ -34,6 +35,7 @@ end
 
 
 function TypedText:Enter()
+    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
 end
 
 function TypedText:Exit()
@@ -43,6 +45,9 @@ function TypedText:Update(dt)
 end
 
 function TypedText:Render(renderer)
+
+    self.mFont:AlignText("left", "top")
+
     self.mFont:DrawText2d(
         renderer,
         self.mBounds:Left(), -- + self.mTextArea:Left(),
@@ -53,6 +58,10 @@ function TypedText:Render(renderer)
 end
 
 function TypedText:CalcDuration()
+
+    -- Simple for now
+    local numberOfPages = #self.mPageList
+    return numberOfPages * self.mWriteDuration
 
 end
 
@@ -69,7 +78,8 @@ function TypedText:DrawBounds()
 end
 
 function TypedText:IsWaitingToAdvance()
-    -- This needs revising.
+    -- This needs revising because waiting to advance means it's all typed out
+    -- we haven't written the typing code yet
     return self.mPageIndex < #self.mPageList
 end
 
