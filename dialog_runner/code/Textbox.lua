@@ -17,7 +17,12 @@ Textbox = {}
 Textbox.__index = Textbox
 function Textbox:Create(params)
 
-    print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
+    print("In textbox:Create: " .. tostring(params.textArea))
+
+    if not params.textArea then
+        dog()
+    end
+
     params = params or {}
 
     if type(params.text) == "string" then
@@ -52,17 +57,12 @@ function Textbox:Create(params)
     this.mAppearTween = Tween:Create(0, 1, this.mIntroDuration, Tween.Linear),
     this.mContinueMark:SetTexture(Texture.Find("continue_caret.png"))
 
-    -- Calculate center point from mBounds
-    -- We can use this to scale.
-    -- We can get this directly from the rect now
-    this.mX = (this.mBounds:Right() + this.mBounds:Left()) / 2
-    this.mY = (this.mBounds:Top() + this.mBounds:Bottom()) / 2
-    this.mWidth = this.mBounds:Right() - this.mBounds:Left()
-    this.mHeight = this.mBounds:Top() - this.mBounds:Bottom()
-
+    print(this.mTextArea)
     this.mTypedText = TypedText:Create
     {
-        bounds = this.mBounds, -- this is of course wrong, we want the inner bounds
+        font = params.font,
+        bounds = this.mTextArea,
+        text = params.text
     }
 
     print("DEBUG-Start", self.mTime or 0)
@@ -71,6 +71,9 @@ function Textbox:Create(params)
     return this
 end
 
+-- 1. Make this the default create
+-- 2. Add a shrink to fit option
+--    - Doesn't support more than one entry or wrapping?
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
 
     print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
@@ -78,46 +81,22 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     params = params or {}
     local text = params.text
     local padding = 10
-    local bounds = Rect.CreateFromCenter(x, y, width, height)
+    local bounds = Rect.CreateFromCenter(x, y, width, height/2)
     --  Text area work better this way
-    local textAreaOffset = Vector.Create(25, 0)
+    local textAreaOffset = Vector.Create(0, 0)
     local textArea = bounds:Clone()
     textArea:Shrink(padding)
 
     --
     -- Section text into box size chunks.
+    -- This can and should be a static function.
     --
-    local wrap = textArea:Width()
-    local faceHeight = math.ceil(params.font:MeasureText(text):Y()) -- <- this is wrong
-    local start, finish = renderer:NextLine(text, 1, wrap)
-
-    local boundsHeight = textArea:Height()
-    local currentHeight = faceHeight
-
-    local chunks = {{string.sub(text, start, finish)}}
-    while finish < #text do
-        start, finish = renderer:NextLine(text, finish, wrap)
-
-        -- If we're going to overflow
-        if (currentHeight + faceHeight) > boundsHeight then
-            -- make a new entry
-            currentHeight = 0
-            table.insert(chunks, {string.sub(text, start, finish)})
-        else
-            table.insert(chunks[#chunks], string.sub(text, start, finish))
-        end
-        currentHeight = currentHeight + faceHeight
-    end
-
-    -- Make each textbox be represented by one string.
-    for k, v in ipairs(chunks) do
-        chunks[k] = table.concat(v)
-    end
+    local pages = TypedText.Pagify(textArea, text, params.font)
 
     local textbox = Textbox:Create
     {
         font = params.font,
-        text = chunks,
+        text = pages,
         size = bounds,
         textAreaOffset = textAreaOffset,
         textArea = textArea,
@@ -170,9 +149,6 @@ function Textbox:JumpTo01(value)
     end
 end
 
-function Textbox:SeenAllChunks()
-    return self.mChunkIndex >= #self.mChunks
-end
 
 function Textbox:EnterWriteState()
     print("Entering write state: ", self.mTime or 0)
@@ -230,8 +206,8 @@ function Textbox:Advance()
     end
 
     -- Should this increment be in the else part of the if statement?
-    self.mChunkIndex = self.mChunkIndex + 1
-    if self:SeenAllChunks() then
+    self.mTypedText:Advance()
+    if self.mTypedText:SeenAllPages() then
         self:EnterOutroState()
     else
         self:EnterWriteState()
@@ -306,19 +282,13 @@ function Textbox:Render(renderer)
         return
     end
 
-    font:DrawText2d(
-        renderer,
-        self.mTextAreaOffset:X() + self.mTextArea:Left(),
-        self.mTextAreaOffset:Y() + self.mTextArea:Top(),
-        self.mChunks[self.mChunkIndex],
-        Vector.Create(1,1,1,1),
-        self.mTextArea:Width())
+    self.mTypedText:Render(renderer)
 
-    if self.mChunkIndex < #self.mChunks then
+    if self.mTypedText:IsWaitingToAdvance() then
         -- There are more chunks t come.
         local offset = 12 + math.floor(math.sin(self.mTime*10)) * scale
         self.mContinueMark:SetScale(scale, scale)
-        self.mContinueMark:SetPosition(self.mX, bottom + offset)
+        self.mContinueMark:SetPosition(self.mTextArea:Left(), self.mTextArea:Bottom() + offset)
         renderer:DrawSprite(self.mContinueMark)
     end
 
