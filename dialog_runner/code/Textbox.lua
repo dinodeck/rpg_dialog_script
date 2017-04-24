@@ -3,7 +3,7 @@ local eTextboxState =
 {
     Intro = "Intro",
     Write = "Write",
-    Wait = "Wait",
+    Wait = "Wait",   -- is this state ever needed now, typed text takes care of it?
     Outro = "Outro"
 }
 
@@ -60,6 +60,7 @@ function Textbox:Create(params)
         bounds = this.mTextArea,
         text = params.text,
         writeDuration = params.writeDuration or 1, -- this will change per page later <wait>
+        OnWaitToAdvance = function() this:mOnWaitToAdvance() end
     }
 
     print("DEBUG-Start", self.mTime or 0)
@@ -133,14 +134,11 @@ function Textbox:JumpTo01(value)
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
         self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
-        -- self.mWriteTween = Tween:Create(0, 1, self.mTypedText:Duration(), Tween.Linear)
         local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
-        -- self.mWriteTween:SetValue01(tween01)
         self.mTypedText:JumpTo01(tween01)
     else
         -- the out tween
         self.mState = eTextboxState.Outro
-        --self.mWriteTween = Tween:Create(1, 1, self.mTypedText:Duration(), Tween.Linear)
         self.mTypedText:JumpTo01(1)
         self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
         local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
@@ -152,14 +150,12 @@ end
 function Textbox:EnterWriteState()
     print("Entering write state: ", self.mTime or 0)
     self.mState = eTextboxState.Write
-    -- self.mWriteTween = Tween:Create(0, 1, self.mTypedText:Duration(), Tween.Linear)
     self.mTypedText:JumpTo01(0)
 end
 
 function Textbox:EnterWaitState()
     print("Entered wait state ", self.mTime or 0)
     self.mState = eTextboxState.Wait
-    self:mOnWaitToAdvance()
 end
 
 function Textbox:EnterOutroState()
@@ -182,10 +178,9 @@ function Textbox:Update(dt)
         end
 
     elseif self.mState == eTextboxState.Write then
-        --self.mWriteTween:Update(dt)
+
         self.mTypedText:Update(dt)
 
-        --if self.mWriteTween:IsFinished() then
         if self.mTypedText:SeenAllPages() then
             print("Finished write tween")
             self:EnterWaitState()
@@ -203,9 +198,11 @@ function Textbox:Update(dt)
 end
 
 function Textbox:Advance()
-    if self.mState ~= eTextboxState.Wait then
+
+    if not self.mTypedText:IsWaitingToAdvance() then
         return
     end
+
 
     -- Should this increment be in the else part of the if statement?
     self.mTypedText:Advance()

@@ -2,16 +2,18 @@
 -- Types out text into a given rect
 -- Also performs chunking as required
 
--- No fitted option here, only a box size
--- It acts as a clip and a state I guess
--- Text that does not fit, will be split into pages
+local eTypedTextState =
+{
+    Write = "Write",
+    Wait = "Wait",
+}
+
 TypedText = {}
 TypedText.__index = TypedText
 function TypedText:Create(params)
 
     params = params or {}
     params.renderer = params.renderer
-
 
     -- We always want a list of strings but we allow a short hand
     -- were a string can be directly past in
@@ -21,27 +23,43 @@ function TypedText:Create(params)
 
     local this =
     {
+        mState = eTypedTextState.Write,
         mFont = params.font,
         mRenderer = params.renderer,
         mBounds = params.bounds or Rect:Create(),
         mPageList = params.text,
         mPageIndex = 1,
+        mOnWaitToAdvance = params.OnWaitToAdvance or function() print("empty wait to advance") end,
         mWriteDuration = params.writeDuration or 1,
         mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
     }
+    this.mWriteTween = Tween:Create(0, 1, this.mWriteDuration)
     setmetatable(this, self)
+
     return this
 end
 
 
 function TypedText:Enter()
-    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
 end
 
 function TypedText:Exit()
 end
 
 function TypedText:Update(dt)
+
+    print("Typed text update", self.mState)
+
+    if self.mState == eTypedTextState.Write then
+        self.mWriteTween:Update(dt)
+
+        if self.mWriteTween:IsFinished() then
+            self.mState = eTypedTextState.Wait
+            print("CALLING WAIT TO ADVANCE")
+            self.mOnWaitToAdvance()
+        end
+    elseif self.mState == eTypedTextState.Wait then
+    end
 end
 
 function TypedText:Render(renderer)
@@ -80,15 +98,26 @@ end
 function TypedText:IsWaitingToAdvance()
     -- This needs revising because waiting to advance means it's all typed out
     -- we haven't written the typing code yet
-    return self.mPageIndex < #self.mPageList
+    return self.mPageIndex < #self.mPageList and self.mState == eTypedTextState.Wait
 end
 
 function TypedText:SeenAllPages()
     return self.mPageIndex >= #self.mPageList
+    -- and
+            -- self.mWriteTween:IsFinished()
 end
 
 function TypedText:Advance()
+
+    print("TYPED TEXT ADVANCE", self.mState)
+
+    if self.mState == eTypedTextState.Write then
+        print("ERROR: Called advance in write state. (This should skip)")
+    end
+
     self.mPageIndex = self.mPageIndex + 1
+    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
+    self.mState = eTypedTextState.Write
 end
 
 function TypedText.Pagify(bounds, text, font)

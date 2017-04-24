@@ -198,8 +198,15 @@ function FixedSequence:Update(dt)
 
     local dt = dt or GetDeltaTime()
     self.mRuntime = self.mRuntime + dt
+    local prevIndex = self.mClipIndex
     self.mClipIndex = self:RuntimeToClipIndex()
     local clip = self.mTimeline[self.mClipIndex]
+
+    if prevIndex ~= self.mClipIndex then
+        print("Moved to next dialog box")
+        local newlyCreatedTypedText = clip.mTextbox.mTypedText
+        print("Typedtext ", tostring(newlyCreatedTypedText:SeenAllPages()))
+    end
 
     clip:Update(dt)
 
@@ -297,9 +304,6 @@ function RenderConversation()
             boxDurationList[k] = boxDurationList[k] + entry.time
         end
     end
-
-    print("TOTAL TIME: " .. tostring(totalTime))
-    PrintTable(boxDurationList)
 
     for k, v in ipairs(gConversation.boxedTime) do
 

@@ -78,18 +78,10 @@ function TextboxClip:GenerateBoxedTime()
 end
 
 function TextboxClip:JumpTo01(value)
-
-    if value == 0 then
-        self:CreateTextbox()
-    else
-        print("Write this properly!")
-        self.mTextbox:JumpTo01(value)
-    end
-
+    self.mTextbox:JumpTo01(value)
 end
 
 function TextboxClip:OnWaitToAdvance()
-    print("called advance")
     self.mTextbox:Advance()
-    -- might want to tidy up the 0-1 ness here, in case we've pushed over.
+    -- might want to call Jump01 incase we're losing time due to waiting a frame
 end
