@@ -96,15 +96,11 @@ function TypedText:DrawBounds()
 end
 
 function TypedText:IsWaitingToAdvance()
-    -- This needs revising because waiting to advance means it's all typed out
-    -- we haven't written the typing code yet
     return self.mPageIndex < #self.mPageList and self.mState == eTypedTextState.Wait
 end
 
 function TypedText:SeenAllPages()
-    return self.mPageIndex >= #self.mPageList
-    -- and
-            -- self.mWriteTween:IsFinished()
+    return self.mPageIndex >= #self.mPageList and self.mState == eTypedTextState.Wait
 end
 
 function TypedText:Advance()

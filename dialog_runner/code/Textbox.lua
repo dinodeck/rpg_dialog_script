@@ -3,7 +3,6 @@ local eTextboxState =
 {
     Intro = "Intro",
     Write = "Write",
-    Wait = "Wait",   -- is this state ever needed now, typed text takes care of it?
     Outro = "Outro"
 }
 
@@ -16,12 +15,6 @@ local eTextboxState =
 Textbox = {}
 Textbox.__index = Textbox
 function Textbox:Create(params)
-
-    print("In textbox:Create: " .. tostring(params.textArea))
-
-    if not params.textArea then
-        dog()
-    end
 
     params = params or {}
 
@@ -73,8 +66,6 @@ end
 -- 2. Add a shrink to fit option
 --    - Doesn't support more than one entry or wrapping?
 function Textbox.CreateFixed(renderer, x, y, width, height, params)
-
-    print("In textbox:Create: " .. tostring(params.OnWaitToAdvance))
 
     params = params or {}
     local text = params.text
@@ -153,11 +144,6 @@ function Textbox:EnterWriteState()
     self.mTypedText:JumpTo01(0)
 end
 
-function Textbox:EnterWaitState()
-    print("Entered wait state ", self.mTime or 0)
-    self.mState = eTextboxState.Wait
-end
-
 function Textbox:EnterOutroState()
     print("Entered out state ", self.mTime or 0)
     self.mState = eTextboxState.Outro
@@ -168,9 +154,7 @@ function Textbox:Update(dt)
 
     self.mTime = self.mTime + dt
 
-    if self.mState == eTextboxState.Wait then
-        return
-    elseif self.mState == eTextboxState.Intro then
+    if self.mState == eTextboxState.Intro then
         self.mAppearTween:Update(dt)
 
         if self.mAppearTween:IsFinished() then
@@ -182,9 +166,9 @@ function Textbox:Update(dt)
         self.mTypedText:Update(dt)
 
         if self.mTypedText:SeenAllPages() then
-            print("Finished write tween")
-            self:EnterWaitState()
+            self:EnterOutroState()
         end
+
 
     elseif self.mState == eTextboxState.Outro then
         self.mAppearTween:Update(dt)
@@ -206,9 +190,15 @@ function Textbox:Advance()
 
     -- Should this increment be in the else part of the if statement?
     self.mTypedText:Advance()
+
+    print("Seen all pages?", self.mTypedText:SeenAllPages(),
+          self.mTypedText.mPageIndex,
+          #self.mTypedText.mPageList)
+
     if self.mTypedText:SeenAllPages() then
         self:EnterOutroState()
     else
+        print("Advance: Write State")
         self:EnterWriteState()
     end
 
@@ -218,7 +208,7 @@ end
 function Textbox:HandleInput()
 
     -- Needs making better. Cancel transitions etc
-    if self.mState == eTextboxState.Wait then
+    if self.mTypedText:IsWaitingToAdvance() then
         if Keyboard.JustPressed(KEY_SPACE) then
             self:OnClick()
         elseif self.mSelectionMenu then
