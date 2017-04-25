@@ -48,14 +48,11 @@ end
 
 function TypedText:Update(dt)
 
-    print("Typed text update", self.mState)
-
     if self.mState == eTypedTextState.Write then
         self.mWriteTween:Update(dt)
 
         if self.mWriteTween:IsFinished() then
             self.mState = eTypedTextState.Wait
-            print("CALLING WAIT TO ADVANCE")
             self.mOnWaitToAdvance()
         end
     elseif self.mState == eTypedTextState.Wait then
@@ -88,7 +85,33 @@ function TypedText:Duration()
 end
 
 function TypedText:JumpTo01(value)
+    print("VALUE: ", value)
+    local progressRatio = 1 + (#self.mPageList * value)
+    local remainder = 1 - ((progressRatio + 1) - progressRatio)
+    local suggestedIndex = math.floor(math.min(progressRatio, #self.mPageList))
 
+    printf("PROGRESS RATIO: %d REMAINDER: %d", progressRatio, remainder)
+    printf("SUGGESTED INDEX [%d]/[%d]", suggestedIndex, #self.mPageList)
+    printf("TWEEN VALUE: %d", remainder)
+    -- Need to find which page and then need to find how much into that page
+
+    -- These are ratios for a two page. Later this has to be a for loop
+    -- 1. Get the total in seconds
+    -- 2. Get the 0-1 fragment of each page
+    -- 3. Place the new index marker and work out the tween
+    -- 4. Treat sub-page elements arenew JumpTo01 box
+    --
+
+    -- This is almost there
+    -- 1 - 2
+    -- 2 - 3 (end)
+    -- local progressRatio = 1 + (#self.mPageList * value)
+    -- local remainder = (progressRatio + 1) - progressRatio
+
+    self.mPageIndex = suggestedIndex
+    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
+    self.mWriteTween:SetValue01(remainder)
+    self.mState = eTypedTextState.Write
 end
 
 function TypedText:DrawBounds()

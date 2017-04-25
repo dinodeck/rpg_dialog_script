@@ -121,6 +121,7 @@ function Textbox:JumpTo01(value)
         self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
         local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
         self.mAppearTween:SetValue01(tween01)
+        self.mTypedText:JumpTo01(0)
     -- Are we in the middle bit:
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
@@ -139,13 +140,11 @@ end
 
 
 function Textbox:EnterWriteState()
-    print("Entering write state: ", self.mTime or 0)
     self.mState = eTextboxState.Write
     self.mTypedText:JumpTo01(0)
 end
 
 function Textbox:EnterOutroState()
-    print("Entered out state ", self.mTime or 0)
     self.mState = eTextboxState.Outro
     self.mAppearTween = Tween:Create(1, 0, self.mOutroDuration, Tween.Linear)
 end
@@ -197,9 +196,6 @@ function Textbox:Advance()
 
     if self.mTypedText:SeenAllPages() then
         self:EnterOutroState()
-    else
-        print("Advance: Write State")
-        self:EnterWriteState()
     end
 
 end
