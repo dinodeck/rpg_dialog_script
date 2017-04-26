@@ -36,22 +36,6 @@ gTextboxData =
     transition = 0.5
 }
 
-TextboxDataLabels =
-{
-    LabelValue:Create(gFont, "Wait Time:", function() return gTextboxData.wait end),
-    LabelValue:Create(gFont, "In Time:", function() return gTextboxData.transition end),
-    LabelValue:Create(gFont, "Out Time:", function() return gTextboxData.transition end)
-}
-
-local testTextbox = Textbox.CreateFixed(
-    gRenderer, 0, 0, 256, 64,
-    {
-        font = gFont,
-        text = "Hello",
-        OnFinish = function() end
-    })
-
-
 local trackTime = 5
 local trackingTween = Tween:Create(0, 1, trackTime)
 
@@ -202,11 +186,11 @@ function FixedSequence:Update(dt)
     self.mClipIndex = self:RuntimeToClipIndex()
     local clip = self.mTimeline[self.mClipIndex]
 
-    if prevIndex ~= self.mClipIndex then
-        print("Moved to next dialog box")
-        local newlyCreatedTypedText = clip.mTextbox.mTypedText
-        print("Typedtext ", tostring(newlyCreatedTypedText:SeenAllPages()))
-    end
+    -- if prevIndex ~= self.mClipIndex then
+    --     print("Moved to next dialog box")
+    --     local newlyCreatedTypedText = clip.mTextbox.mTypedText
+    --     print("Typedtext ", tostring(newlyCreatedTypedText:SeenAllPages()))
+    -- end
 
     clip:Update(dt)
 
@@ -258,7 +242,6 @@ end
 gConversation = nil
 function LoadConversationScript(script)
 
-    -- local timeForScript, boxedTime = TimeForScript(script)
     local speakerMap = {}
     for k, v in ipairs(script) do
         speakerMap[v.speaker] = true
@@ -322,8 +305,6 @@ function DrawEntry(x, y, w, entry, c)
     for k, v in ipairs(entry) do
         local subW = w * v.time01
         local subC = Vector.Create(c)
-
-
 
         if v.id == "outro" or v.id == "intro" then
             subC = subC * 0.75
@@ -453,12 +434,6 @@ function update()
     playButton:HandleUpdate()
     stopButton:Render(gRenderer)
     playButton:Render(gRenderer)
-
-    local labelY = 128
-    for k, v in ipairs(TextboxDataLabels) do
-        v:SetPosition(screenW + 100, labelY - ((k-1)*16))
-        v:Render(gRenderer)
-    end
 
     handleInput()
 
