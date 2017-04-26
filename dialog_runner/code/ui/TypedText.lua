@@ -33,9 +33,10 @@ function TypedText:Create(params)
         mWriteDuration = params.writeDuration or 1,
         mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
     }
-    this.mWriteTween = Tween:Create(0, 1, this.mWriteDuration)
-    setmetatable(this, self)
 
+    setmetatable(this, self)
+    local firstPage = this.mPageList[this.mPageIndex]
+    this.mWriteTween = Tween:Create(0, 1, this:CalcPageWriteDuration(firstPage))
     return this
 end
 
@@ -73,43 +74,62 @@ function TypedText:Render(renderer)
 end
 
 function TypedText:CalcDuration()
-
-    -- Simple for now
-    local numberOfPages = #self.mPageList
-    return numberOfPages * self.mWriteDuration
-
+    local total = 0
+    for k, v in ipairs(self.mPageList) do
+        total = total + self:CalcPageWriteDuration(v)
+    end
+    return total
 end
 
 function TypedText:Duration()
     return self:CalcDuration()
 end
 
+function TypedText:CalcPageWriteDuration(page)
+    -- print(#page)
+    if 33 == #page then
+        return 3
+    end
+    return self.mWriteDuration
+end
+
 function TypedText:JumpTo01(value)
-    print("VALUE: ", value)
-    local progressRatio = 1 + (#self.mPageList * value)
-    local remainder = 1 - ((progressRatio + 1) - progressRatio)
-    local suggestedIndex = math.floor(math.min(progressRatio, #self.mPageList))
 
-    printf("PROGRESS RATIO: %d REMAINDER: %d", progressRatio, remainder)
-    printf("SUGGESTED INDEX [%d]/[%d]", suggestedIndex, #self.mPageList)
-    printf("TWEEN VALUE: %d", remainder)
-    -- Need to find which page and then need to find how much into that page
+    local remainder = 0
+    local suggestedIndex = 1
 
-    -- These are ratios for a two page. Later this has to be a for loop
-    -- 1. Get the total in seconds
-    -- 2. Get the 0-1 fragment of each page
-    -- 3. Place the new index marker and work out the tween
-    -- 4. Treat sub-page elements arenew JumpTo01 box
-    --
+    local totalTime = self:Duration() -- might want to calc *just* for pages if we add intro / outro stuff later
+    local trackTime = 0
+    local normalTimePrev = 0
+    local jumpDone = false
+    for k, v in ipairs(self.mPageList) do
 
-    -- This is almost there
-    -- 1 - 2
-    -- 2 - 3 (end)
-    -- local progressRatio = 1 + (#self.mPageList * value)
-    -- local remainder = (progressRatio + 1) - progressRatio
+        if jumpDone then
+            -- Jump page to 0
+        else
+            local pageTimeSecs = self:CalcPageWriteDuration(v)
+            trackTime = trackTime + pageTimeSecs
+
+            local normalTime = trackTime / totalTime
+
+            if normalTime >= value then
+
+                suggestedIndex = k
+                remainder = Lerp(value, normalTimePrev, normalTime, 0, 1)
+
+                jumpDone = true
+            else
+                -- Jump Page to 1
+            end
+
+            normalTimePrev = normalTime
+        end
+    end
+
 
     self.mPageIndex = suggestedIndex
-    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
+    local writeDuration = self:CalcPageWriteDuration(self.mPageList[suggestedIndex])
+    self.mWriteTween = Tween:Create(0, 1, writeDuration)
     self.mWriteTween:SetValue01(remainder)
     self.mState = eTypedTextState.Write
 end
@@ -135,7 +155,13 @@ function TypedText:Advance()
     end
 
     self.mPageIndex = self.mPageIndex + 1
-    self.mWriteTween = Tween:Create(0, 1, self.mWriteDuration)
+    local nextPage = self.mPageList[self.mPageIndex]
+
+    if nextPage then
+        local writeDuration = self:CalcPageWriteDuration(nextPage)
+        self.mWriteTween = Tween:Create(0, 1, writeDuration)
+    end
+
     self.mState = eTypedTextState.Write
 end
 
