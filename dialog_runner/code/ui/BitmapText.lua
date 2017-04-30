@@ -103,6 +103,54 @@ function BitmapText:RenderSubString(renderer, x, y, text, start, finish, color)
     end
 end
 
+function BitmapText:DrawCache(renderer, cache, trans01, Transition)
+
+    local index = math.floor(#cache*trans01)
+    function calc01(index, count, progress)
+        return (count*progress) - index
+    end
+    char01 = calc01(index, #cache, trans01)
+
+    Transition = Transition or function(_, _, _, data) return data end
+
+    for k, v in ipairs(cache) do
+
+        local charData = Transition(k, index, char01, v)
+
+        self.mSprite:SetUVs(unpack(charData.uvs))
+        self.mSprite:SetPosition(unpack(charData.position))
+        self.mSprite:SetColor(charData.color)
+        renderer:DrawSprite(self.mSprite)
+    end
+
+end
+
+-- This is a duplicate of the above there must be a better way
+function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)
+    start = start or 1
+    finish = finish or string.len(text)
+    color = color or Vector.Create(1, 1, 1, 1)
+
+    self.mSprite:SetColor(color)
+    local prevC = -1
+    for i = start, finish do
+        local c = string.sub(text, i, i)
+        if prevC ~= -1 then
+            -- kerning can be done here!
+            x = x + self:GlyphWidth(prevC)
+        end
+
+        table.insert(cache,
+        {
+            uvs = { self:GlyphUV(c) },
+            position = { x + self:GlyphOffset(c), y },
+            color = color
+        })
+
+        prevC = c
+    end
+end
+
 function BitmapText:Round(n)
     if n < 0 then
         return math.ceil(n - 0.5)
@@ -111,7 +159,15 @@ function BitmapText:Round(n)
     end
 end
 
-function BitmapText:DrawText2d(renderer, x, y, text, color, maxWidth)
+function BitmapText:CacheText2d(x, y, text, color, maxWidth)
+    -- returns a table of character info and positions
+    -- this is then going to be modified and drawn
+    local cache = {}
+    self:DrawText2d(nil, x, y, text, color, maxWidth, cache)
+    return cache
+end
+
+function BitmapText:DrawText2d(renderer, x, y, text, color, maxWidth, cache)
 
     -- We can only draw strings, so coerce all
     -- other types to string
@@ -158,10 +214,17 @@ function BitmapText:DrawText2d(renderer, x, y, text, color, maxWidth)
            xPos = xPos - math.ceil(outPixelWidth * 0.5)
         end
 
-        self:RenderSubString(renderer,
-                        xPos, y + yOffset,
-                        text, outStart, lineEnd,
-                        color)
+        if cache then
+            self:CacheSubString(cache,
+                                xPos, y + yOffset,
+                                text, outStart, lineEnd,
+                                color)
+        else
+            self:RenderSubString(renderer,
+                            xPos, y + yOffset,
+                            text, outStart, lineEnd,
+                            color)
+        end
 
         y = y - self.mGlyphH;
 

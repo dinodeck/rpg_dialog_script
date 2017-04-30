@@ -310,14 +310,13 @@ function DrawEntry(x, y, w, entry, c)
             subC = subC * 0.75
         end
 
-        -- Leave a 1 pixel gap at the
-        -- start of each entry
-        if k == 1 then
-            subX = subX + 1
-            subW = subW - 1
+        if v.id == "pause" then
+           subC = gPalette.blue
         end
 
-        DrawBoxSprite(subX, y, subW, subC)
+        -- Leave a 1 pixel gap at the
+        -- start of each entry
+        DrawBoxSprite(subX + 1, y, subW - 1, subC)
 
         subX = subX + subW
     end

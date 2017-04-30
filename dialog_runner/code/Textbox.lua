@@ -164,11 +164,6 @@ function Textbox:Update(dt)
 
         self.mTypedText:Update(dt)
 
-        if self.mTypedText:SeenAllPages() then
-            self:EnterOutroState()
-        end
-
-
     elseif self.mState == eTextboxState.Outro then
         self.mAppearTween:Update(dt)
 
@@ -182,22 +177,17 @@ end
 
 function Textbox:Advance()
 
-    if not self.mTypedText:IsWaitingToAdvance() then
-        return
-    end
-
-
-    -- Should this increment be in the else part of the if statement?
-    self.mTypedText:Advance()
-
     print("Seen all pages?", self.mTypedText:SeenAllPages(),
           self.mTypedText.mPageIndex,
           #self.mTypedText.mPageList)
 
     if self.mTypedText:SeenAllPages() then
         self:EnterOutroState()
+        return
     end
 
+        -- Should this increment be in the else part of the if statement?
+    self.mTypedText:Advance()
 end
 
 

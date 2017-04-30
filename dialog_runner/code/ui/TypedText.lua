@@ -54,9 +54,14 @@ function TypedText:Update(dt)
 
         if self.mWriteTween:IsFinished() then
             self.mState = eTypedTextState.Wait
-            self.mOnWaitToAdvance()
+            self.mWaitCounter = 0
         end
     elseif self.mState == eTypedTextState.Wait then
+        self.mWaitCounter = self.mWaitCounter + GetDeltaTime()
+        if self.mWaitCounter >= self:PagePause() then
+            -- probably should do a jump here to catch rounding
+            self.mOnWaitToAdvance()
+        end
     end
 end
 
@@ -64,19 +69,30 @@ function TypedText:Render(renderer)
 
     self.mFont:AlignText("left", "top")
 
-    self.mFont:DrawText2d(
-        renderer,
+    local cache = gFont:CacheText2d(
         self.mBounds:Left(), -- + self.mTextArea:Left(),
         self.mBounds:Top(), -- + self.mTextArea:Top(),
         self.mPageList[self.mPageIndex],
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
+
+    gFont:DrawCache(gRenderer, cache, self.mWriteTween:Value(),
+                    function(index, tranIndex, tran01, data)
+                        local charData = DeepClone(data)
+
+                        if index > tranIndex then
+                            -- Color isn't cloned correctly, needs to be a table
+                            charData.color = Vector.Create(1,1,1,0)
+                        end
+
+                        return charData
+                    end)
 end
 
 function TypedText:CalcDuration()
     local total = 0
     for k, v in ipairs(self.mPageList) do
-        total = total + self:CalcPageWriteDuration(v)
+        total = total + self:CalcPageWriteDuration(v) + self:PagePause()
     end
     return total
 end
@@ -87,10 +103,11 @@ end
 
 function TypedText:CalcPageWriteDuration(page)
     -- print(#page)
-    if 33 == #page then
-        return 3
-    end
     return self.mWriteDuration
+end
+
+function TypedText:PagePause()
+    return 1.0
 end
 
 function TypedText:JumpTo01(value)
@@ -106,9 +123,10 @@ function TypedText:JumpTo01(value)
 
         if jumpDone then
             -- Jump page to 0
+            -- Only one page shown at time so handled automatically
         else
             local pageTimeSecs = self:CalcPageWriteDuration(v)
-            trackTime = trackTime + pageTimeSecs
+            trackTime = trackTime + pageTimeSecs -- + self:PagePause()
 
             local normalTime = trackTime / totalTime
 
@@ -119,7 +137,8 @@ function TypedText:JumpTo01(value)
 
                 jumpDone = true
             else
-                -- Jump Page to 1
+                -- Jump Page to 1, done automatically because
+                -- Only one page shown at a time
             end
 
             normalTimePrev = normalTime
