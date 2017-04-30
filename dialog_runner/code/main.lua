@@ -307,11 +307,11 @@ function DrawEntry(x, y, w, entry, c)
         local subC = Vector.Create(c)
 
         if v.id == "outro" or v.id == "intro" then
-            subC = subC * 0.75
+            subC = gPalette.blue
         end
 
         if v.id == "pause" then
-           subC = gPalette.blue
+            subC = subC * 0.80
         end
 
         -- Leave a 1 pixel gap at the

@@ -115,34 +115,46 @@ function TypedText:JumpTo01(value)
     local remainder = 0
     local suggestedIndex = 1
 
-    local totalTime = self:Duration() -- might want to calc *just* for pages if we add intro / outro stuff later
+    local totalTime = 0
+    for k, v in ipairs(self.mPageList) do
+        totalTime = totalTime + self:CalcPageWriteDuration(v) + self:PagePause()
+    end
+
     local trackTime = 0
     local normalTimePrev = 0
-    local jumpDone = false
+    -- local jumpDone = false
     for k, v in ipairs(self.mPageList) do
 
-        if jumpDone then
-            -- Jump page to 0
-            -- Only one page shown at time so handled automatically
-        else
-            local pageTimeSecs = self:CalcPageWriteDuration(v)
-            trackTime = trackTime + pageTimeSecs -- + self:PagePause()
+        -- Increment the time for the given page
+        --     - includes pause
+        local writeDuration = self:CalcPageWriteDuration(v)
+        local pageDuration = writeDuration + self:PagePause()
 
-            local normalTime = trackTime / totalTime
+        -- Convert to 01
+        -- Normaltime represents the end of the current timebox
+        local normalTimePage = (trackTime + pageDuration) / totalTime
+        local normalTimeWrite = (trackTime + writeDuration) / totalTime
 
-            if normalTime >= value then
+        -- See if the value is in the current interval
+        if normalTimePage >= value then
+            -- Decide what to do.
+            suggestedIndex = k
 
-                suggestedIndex = k
-                remainder = Lerp(value, normalTimePrev, normalTime, 0, 1)
-
-                jumpDone = true
+            if value > normalTimeWrite then
+                -- We've finished writing and we're waiting
+                remainder = 1
+                local waitRemainder = Lerp(value, normalTimeWrite, normalTimePage, 0, 1)
+                self.mState = eTypedTextState.Wait
+                self.mWaitCounter = self:PagePause() * waitRemainder
             else
-                -- Jump Page to 1, done automatically because
-                -- Only one page shown at a time
+                remainder = Lerp(value, normalTimePrev, normalTimeWrite, 0, 1)
+                self.mState = eTypedTextState.Write
             end
-
-            normalTimePrev = normalTime
+            break
         end
+
+        trackTime = trackTime + pageDuration
+        normalTimePrev = normalTimePage
     end
 
 
@@ -150,7 +162,7 @@ function TypedText:JumpTo01(value)
     local writeDuration = self:CalcPageWriteDuration(self.mPageList[suggestedIndex])
     self.mWriteTween = Tween:Create(0, 1, writeDuration)
     self.mWriteTween:SetValue01(remainder)
-    self.mState = eTypedTextState.Write
+
 end
 
 function TypedText:DrawBounds()
