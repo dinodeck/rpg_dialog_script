@@ -30,7 +30,7 @@ function TypedText:Create(params)
         mPageList = params.text,
         mPageIndex = 1,
         mOnWaitToAdvance = params.OnWaitToAdvance or function() print("empty wait to advance") end,
-        mWriteDuration = params.writeDuration or 1,
+        mWriteCharDuration = params.writeCharDuration or 0.025,
         mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
     }
 
@@ -102,8 +102,15 @@ function TypedText:Duration()
 end
 
 function TypedText:CalcPageWriteDuration(page)
-    -- print(#page)
-    return self.mWriteDuration
+    -- print()
+
+    -- In the future we might want to go char by char and see
+    -- what effects it has on it to get the full duration
+
+    local charCount = #page
+
+
+    return charCount * self.mWriteCharDuration
 end
 
 function TypedText:PagePause()

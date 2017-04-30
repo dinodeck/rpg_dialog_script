@@ -52,7 +52,7 @@ function Textbox:Create(params)
         font = params.font,
         bounds = this.mTextArea,
         text = params.text,
-        writeDuration = params.writeDuration or 1, -- this will change per page later <wait>
+        writeCharDuration = params.writeCharDuration or 0.025, -- this will change per page later <wait>
         OnWaitToAdvance = function() this:mOnWaitToAdvance() end
     }
 
