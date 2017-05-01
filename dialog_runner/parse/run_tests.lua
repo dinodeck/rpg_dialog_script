@@ -30,7 +30,7 @@ tests =
     {
          name = "Speaker with name and line creates syntax tree representation.",
          test = function()
-            local testTable = {{speaker = "null", text = "Hello" }}
+            local testTable = {{speaker = "null", text = {"Hello"} }}
             return AreTablesEqual(DoParse("null:Hello"), testTable)
          end
     },
@@ -58,7 +58,7 @@ tests =
     {
         name = "Speech may contain colon",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello Altar: Destroyer of Worlds." }}
+            local testTable = {{speaker = "null", text = {"Hello Altar: Destroyer of Worlds."} }}
             return AreTablesEqual(DoParse("null:Hello Altar: Destroyer of Worlds."), testTable)
         end,
     },
@@ -72,73 +72,81 @@ tests =
     {
         name = "Speaker mame may contain space",
         test = function()
-            local testTable = {{speaker = "Mr null", text = "Hello" }}
+            local testTable = {{speaker = "Mr null", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Mr null:Hello"), testTable)
         end
     },
     {
         name = "Ignore leading newline in speech",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello" }}
+            local testTable = {{speaker = "null", text = {"Hello"} }}
             return AreTablesEqual(DoParse("null:\nHello"), testTable)
         end
     },
     {
         name = "Ignore leading whitespace in speech",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello" }}
+            local testTable = {{speaker = "null", text = {"Hello"} }}
             return AreTablesEqual(DoParse("null: Hello"), testTable)
         end
     },
     {
         name = "Speech lines are joined by default",
         test = function()
-            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
             return AreTablesEqual(DoParse("null:It was really dark\nthat's why we didn't see him."), testTable)
         end
     },
     {
         name = "Extra space before speech line break is ignored",
         test = function()
-            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
             return AreTablesEqual(DoParse("null:It was really dark \nthat's why we didn't see him."), testTable)
         end
     },
     {
         name = "Extra space after speech line break is ignored",
         test = function()
-            local testTable = {{speaker = "null", text = "It was really dark that's why we didn't see him." }}
+            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
             return AreTablesEqual(DoParse("null:It was really dark \n that's why we didn't see him."), testTable)
         end
     },
     {
         name = "Double space in speech is counted",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello\nGoodbye" }}
+            local testTable = {{speaker = "null", text = {"Hello\nGoodbye"} }}
             return AreTablesEqual(DoParse("null:Hello\n\nGoodbye"), testTable)
         end
     },
     {
         name = "Trailing newlines are removed",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello\nGoodbye" }}
+            local testTable = {{speaker = "null", text = {"Hello\nGoodbye"} }}
             return AreTablesEqual(DoParse("null:Hello\n\nGoodbye\n\n\n"), testTable)
         end
     },
     {
         name = "A script can have multiple speakers",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
+            local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("null:Hello\nbob:Hello"), testTable)
         end
     },
     {
         name = "Space between multiple speakers is ignored",
         test = function()
-            local testTable = {{speaker = "null", text = "Hello" }, {speaker = "bob", text = "Hello" }}
+            local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
         end
-    }
+    },
+
+    -- All the above tests should return text as a table not a string
+    -- Then later there needs to be a bit of clever mungery to get it to look correct
+
+    -- {
+    --     name = "Empty line means new entry",
+    --     local testTable = {{speaker="null", text}}
+    -- }
     -- {
     --     name = "missing closing brace - simple error",
     --     test = function()

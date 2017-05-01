@@ -331,13 +331,14 @@ function CreateContext(content)
             table.insert(self.syntax_tree,
             {
                 speaker = speaker,
-                text = {},
+                lineList = {},
+                text = ""
             })
         end,
 
         AddLine = function(self, line)
             local current = self.syntax_tree[#self.syntax_tree]
-            table.insert(current.text, line)
+            table.insert(current.lineList, line)
         end,
 
         AddLineBreak = function(self)
@@ -350,24 +351,24 @@ function CreateContext(content)
             if not current then return end
 
             -- Avoid double spaces
-            for k, v in ipairs(current.text) do
+            for k, v in ipairs(current.lineList) do
                 if v:sub(-1) == " " then
-                    current.text[k] = current.text[k]:sub(1, -2)
+                    current.lineList[k] = current.lineList[k]:sub(1, -2)
                 end
             end
 
             -- Trim trailing newlines
-            for i = #current.text, 1, -1 do
-                local v = current.text[i]
+            for i = #current.lineList, 1, -1 do
+                local v = current.lineList[i]
                 if v == '\n' then
-                    table.remove(current.text)
+                    table.remove(current.lineList)
                 else
                     break
                 end
             end
 
             local buffer = ""
-            for k, v in ipairs(current.text) do
+            for k, v in ipairs(current.lineList) do
 
                 if buffer == "" or buffer:sub(-1) == '\n' or v:sub(-1) == '\n' then
                     buffer = buffer .. v
@@ -377,7 +378,7 @@ function CreateContext(content)
 
             end
 
-            current.text = buffer
+            current.text = {buffer}
 
         end
     }
