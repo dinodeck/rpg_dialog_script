@@ -54,6 +54,10 @@ function TrackBar:Bottom()
     return self.mY - self.mHeight * 0.5
 end
 
+function TrackBar:Top()
+    return self.mY + self.mHeight * 0.5
+end
+
 function TrackBar:LeftTrimmed()
     return self:Left() + self.mTrackTrim
 end

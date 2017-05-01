@@ -9,6 +9,9 @@ gPath = "example_1.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
+gGhostTrack = Sprite:Create()
+gGhostTrack:SetTexture(Texture.Find("track.png"))
+
 gPalette =
 {
     green = RGB(202, 224, 172),
@@ -353,6 +356,15 @@ function JumpTrackBar(v)
     trackingTween:SetValue01(v)
 end
 
+function JumpTo01(value)
+    if gConversation then
+        stopButton:OnClick()
+        gConversation.sequence:JumpTo01(value)
+        JumpTrackBar(value)
+        gTrackBar:SetValue01(value)
+    end
+end
+
 function handleInput()
     if Keyboard.JustPressed(KEY_L) then
         local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_1.txt", "rb")
@@ -375,19 +387,37 @@ function handleInput()
         end
     end
 
-    local function jump(value)
-        if gConversation then
-            stopButton:OnClick()
-            gConversation.sequence:JumpTo01(value)
-            JumpTrackBar(value)
-            gTrackBar:SetValue01(value)
-        end
-    end
 
-    if Keyboard.JustPressed(KEY_1) then jump(0.05) end
-    if Keyboard.JustPressed(KEY_2) then jump(0.25) end
-    if Keyboard.JustPressed(KEY_3) then jump(0.333) end
-    if Keyboard.JustPressed(KEY_4) then jump(0.45) end
+
+    if Keyboard.JustPressed(KEY_1) then JumpTo01(0.05) end
+    if Keyboard.JustPressed(KEY_2) then JumpTo01(0.25) end
+    if Keyboard.JustPressed(KEY_3) then JumpTo01(0.333) end
+    if Keyboard.JustPressed(KEY_4) then JumpTo01(0.45) end
+end
+
+function MouseInTracker()
+    local pos = Mouse.Position()
+
+    -- Create a rect from the tracker?
+    local wPad = 20
+    local hPad = 20
+    local r = Rect.CreateFromLimits(gTrackBar:Left() - wPad,
+                                    gTrackBar:Bottom() - hPad,
+                                    gTrackBar:Right() + wPad,
+                                    gTrackBar:Top() + hPad)
+
+    -- clamp mouse pos to limited rect
+
+    return r:IsInside(pos:X(), pos:Y())
+end
+
+function ClampMouseToTracker()
+    local pos = Mouse.Position()
+    local r = Rect.CreateFromLimits(gTrackBar:LeftTrimmed(),
+                                    gTrackBar:Bottom(),
+                                    gTrackBar:RightTrimmed(),
+                                    gTrackBar:Top())
+    return r:Clamp(pos)
 end
 
 local errorLines = nil
@@ -451,4 +481,16 @@ function update()
     gIndicator:SetPosition(loadX - 10, loadY - 5)
     gFont:AlignText("left", "top")
     gFont:DrawText2d(gRenderer, loadX, loadY, "PATH: " .. gPath)
+
+    if MouseInTracker() then
+        local cPos = ClampMouseToTracker()
+        gGhostTrack:SetColor(Vector.Create(1,1,0,1))
+        gGhostTrack:SetPosition(cPos:X(), gTrackBar:Y())
+        gRenderer:DrawSprite(gGhostTrack)
+
+        if Mouse.Held(MOUSE_BUTTON_LEFT) then
+            local v = Lerp(cPos:X(), gTrackBar:LeftTrimmed(), gTrackBar:RightTrimmed(), 0, 1)
+            JumpTo01(v)
+        end
+    end
 end

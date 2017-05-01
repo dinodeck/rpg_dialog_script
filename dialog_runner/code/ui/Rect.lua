@@ -29,6 +29,19 @@ function Rect.CreateFromLimits(left, bottom, right, top)
     return b
 end
 
+function Rect:IsInside(x, y)
+
+    local inY = y >= self:Bottom() and y <= self:Top()
+    local inX = x >= self:Left() and x <= self:Right()
+    return inX and inY
+end
+
+function Rect:Clamp(pos)
+    local cX = Clamp(pos:X(), self:Left(), self:Right())
+    local cY Clamp(pos:Y(), self:Bottom(), self:Top())
+    return Vector.Create(cX, cY)
+end
+
 function Rect:Clone()
     local r = Rect:Create(self.mX, self.mY, self.mWidth, self.mHeight)
     r:Scale01(r.mScale)
