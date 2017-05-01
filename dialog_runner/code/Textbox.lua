@@ -133,7 +133,7 @@ function Textbox:JumpTo01(value)
         self.mState = eTextboxState.Outro
         self.mTypedText:JumpTo01(1)
         self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
-        local tween10 = Lerp(timePassed, writeThreshold, duration, 1, 0)
+        local tween10 = Lerp(timePassed, writeThreshold, duration, 0, 1)
         self.mAppearTween:SetValue01(tween10)
     end
 end
