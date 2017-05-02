@@ -28,6 +28,8 @@ function RunTests(tests)
 
     passCount = 0
 
+    failureList = {}
+
     for k, v in ipairs(tests) do
         printf("TEST: %s", v.name)
         local test_result = false
@@ -35,6 +37,8 @@ function RunTests(tests)
         printf("RESULT: %s", tostring(test_result))
         if test_result then
             passCount = passCount + 1
+        else
+            table.insert(failureList, v.name)
         end
         if not isError then
             printf("ERROR: %s", tostring(msg))
@@ -43,4 +47,11 @@ function RunTests(tests)
     end
 
     printf("Tests passed [%d/%d]", passCount, #tests)
+
+    if #failureList > 0 then
+        print("FAILURES:")
+        for k, v in ipairs(failureList) do
+            printf("    %s", v)
+        end
+    end
 end

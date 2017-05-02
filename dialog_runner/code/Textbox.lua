@@ -80,7 +80,18 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     -- Section text into box size chunks.
     -- This can and should be a static function.
     --
-    local pages = TypedText.Pagify(textArea, text, params.font)
+    local pages = {}
+    if type(text) == "table" then
+        for k, v in ipairs(text) do
+            local subPages = TypedText.Pagify(textArea, v, params.font)
+            for i, j in ipairs(subPages) do
+                table.insert(pages, j)
+            end
+        end
+    else
+        pages = TypedText.Pagify(textArea, text, params.font)
+    end
+
 
     local textbox = Textbox:Create
     {

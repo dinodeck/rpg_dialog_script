@@ -367,18 +367,36 @@ function CreateContext(content)
                 end
             end
 
+            current.text = {}
             local buffer = ""
+
             for k, v in ipairs(current.lineList) do
 
                 if buffer == "" or buffer:sub(-1) == '\n' or v:sub(-1) == '\n' then
-                    buffer = buffer .. v
+
+                    -- Two spaces are a new entry
+                    if v == '\n' then
+
+                        if buffer ~= "" then
+
+                            if buffer:sub(-1) == '\n' then
+                                buffer = buffer:sub(1, -2)
+                            end
+                            table.insert(current.text, buffer)
+                            buffer = ""
+                        end
+
+                    else
+                        buffer = buffer .. v
+                    end
                 else
                     buffer = buffer .. ' ' .. v
                 end
 
             end
 
-            current.text = {buffer}
+            table.insert(current.text, buffer)
+            current.lineList = nil
 
         end
     }

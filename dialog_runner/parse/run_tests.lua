@@ -112,16 +112,9 @@ tests =
         end
     },
     {
-        name = "Double space in speech is counted",
-        test = function()
-            local testTable = {{speaker = "null", text = {"Hello\nGoodbye"} }}
-            return AreTablesEqual(DoParse("null:Hello\n\nGoodbye"), testTable)
-        end
-    },
-    {
         name = "Trailing newlines are removed",
         test = function()
-            local testTable = {{speaker = "null", text = {"Hello\nGoodbye"} }}
+            local testTable = {{speaker = "null", text = {"Hello", "Goodbye"} }}
             return AreTablesEqual(DoParse("null:Hello\n\nGoodbye\n\n\n"), testTable)
         end
     },
