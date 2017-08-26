@@ -5,7 +5,7 @@ Asset.Run('ParseCore.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_1.txt"
+gPath = "example_3.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
@@ -30,13 +30,6 @@ gTrackBar = TrackBar:Create
     color = Vector.Create(0.5, 0.5, 0.5, 1),
     texture = Texture.Find("groove.png"),
     thumbTexture = Texture.Find("track.png")
-}
-
--- This data isn't fed into the setup yet
-gTextboxData =
-{
-    wait = 1,
-    transition = 0.5
 }
 
 local trackTime = 5
@@ -230,8 +223,12 @@ function CreateConversationSequence(script)
 
     for k, v in ipairs(script) do
         -- 1. Create a textbox
+
+        local h = 96
+        local w = math.floor(h * 2.414213)
+
         local textbox = TextboxClip.CreateFixed(gRenderer,
-            0, 0, 256, 64,
+            0, 0, w, h,
             {
                 font = gFont,
                 text = v.text,
@@ -367,7 +364,7 @@ end
 
 function handleInput()
     if Keyboard.JustPressed(KEY_L) then
-        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_1.txt", "rb")
+        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_3.txt", "rb")
         local content = f:read("*all")
         f:close()
         local script, result = DoParse(content)
@@ -453,7 +450,7 @@ function update()
     gTrackBar:Render(gRenderer)
 
     gFont:AlignText("left", "top")
-    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner")
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner:")
 
     gFont:AlignText("center", "top")
     gFont:DrawText2d(gRenderer, gTrackBar:LeftTrimmed(), tracklabelY, "0")

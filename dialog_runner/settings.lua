@@ -7,7 +7,7 @@ manifest = "manifest.lua"
 main_script = "main.lua"
 on_update = "update()"
 
-display_width = width*2
-display_height = height*2
+--display_width = width*2
+--display_height = height*2
 
 webserver = false

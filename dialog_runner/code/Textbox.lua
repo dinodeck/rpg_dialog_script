@@ -74,7 +74,7 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     --  Text area work better this way
     local textAreaOffset = Vector.Create(0, 0)
     local textArea = bounds:Clone()
-    textArea:Shrink(padding)
+    textArea:Shrink(padding*2, padding)
 
     --
     -- Section text into box size chunks.
