@@ -78,6 +78,11 @@ manifest =
         {
             path = "code/ui/TypedText.lua"
         },
+        -- This move M of a MVC but here it is
+        ['PlayController.lua'] =
+        {
+            path = "code/ui/PlayController.lua"
+        }
 
     },
     textures =

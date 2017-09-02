@@ -290,6 +290,11 @@ end
 
 function BitmapText:MeasureText(text, maxWidth)
 
+    -- This function would be easy to change, if it didn't have the if
+    -- Handle \n lines
+    -- Countlines uses NextLine
+    -- That's the place to make the change
+
     local maxWidth = maxWidth or -1
 
     if maxWidth < 1 then
@@ -321,43 +326,36 @@ function BitmapText:NextLine(text, cursor, maxWidth)
     end
 
     local start = cursor
-    local finish = cursor
+    local finish = cursor + 1
 
-    local prevC = -1
+    local prevC = string.sub(text, cursor, cursor)
     local prevNonWhite = -1
 
     local pixelWidth = 0
     local pixelWidthStart = 0
 
-    for i = cursor, string.len(text) do
+    for i = cursor + 1, string.len(text) do
         local c = string.sub(text, i, i)
+        local finishW = self:GlyphWidth(prevC)--self.mGlyphW;
 
+        if start == cursor or
+            (pixelWidth  + finishW) < maxWidth or
+            maxWidth == -1 then
 
-
-        if prevC ~= -1 then
-
-            local finishW = self:GlyphWidth(prevC)--self.mGlyphW;
-
-            if start == cursor or
-                (pixelWidth  + finishW) < maxWidth or
-                maxWidth == -1 then
-
-                if self:IsWhiteSpace(c) then
-                    start = math.max(cursor, i - 1)
-                    pixelWidthStart = pixelWidth
-                    prevNonWhite = prevC
-                end
-
-                pixelWidth = pixelWidth + finishW
-            else
-                finishW = self:GlyphWidth(prevC)
-                return cursor, start + 1, pixelWidthStart + finishW
+            if self:IsWhiteSpace(c) then
+                start = math.max(cursor, i - 1)
+                pixelWidthStart = pixelWidth
+                prevNonWhite = prevC
             end
+
+            pixelWidth = pixelWidth + finishW
+        else
+            finishW = self:GlyphWidth(prevC)
+            return cursor, start + 1, pixelWidthStart + finishW
         end
 
         prevC = c;
         finish = finish + 1;
-
     end
 
     local finishW = 0;

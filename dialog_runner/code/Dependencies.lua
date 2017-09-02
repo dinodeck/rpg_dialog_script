@@ -31,6 +31,7 @@ Apply({
         "Textbox.lua",
         "TextboxClip.lua",
         "Rect.lua",
-        "TypedText.lua"
+        "TypedText.lua",
+        "PlayController.lua"
     },
     function(v) Asset.Run(v) end)

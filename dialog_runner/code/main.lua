@@ -2,6 +2,7 @@ LoadLibrary('Asset')
 Asset.Run('Dependencies.lua')
 Asset.Run('HigherOrder.lua')
 Asset.Run('ParseCore.lua')
+Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
@@ -41,6 +42,8 @@ local tracklabelY = gTrackBar:Bottom() - 4
 
 local stopButton
 local playButton
+local gPlayController
+
 -- Play buttons
 playButton = ModalButton:Create
 {
@@ -55,11 +58,12 @@ playButton = ModalButton:Create
     OnClick = function(self)
         if not gConversation then return end
 
-        if self.mEngaged then
-            self:TurnOff()
+        print(gPlayController.mState)
+
+        if gPlayController:IsPlaying() then
+            gPlayController:DoPause()
         else
-            stopButton:TurnOff()
-            self:TurnOn()
+            gPlayController:DoPlay()
         end
     end
 }
@@ -75,13 +79,8 @@ stopButton = ModalButton:Create
         self.mBaseSprite:SetColor(Vector.Create(1, 1, 1, 1))
     end,
     OnClick = function(self)
-        playButton:TurnOff()
-        trackingTween = Tween:Create(0, 1, trackTime)
-        gTrackBar:SetValue01(0)
-
-        if gConversation then
-            gConversation.sequence:JumpTo01(0)
-        end
+        if not gConversation then return end
+        gPlayController:DoAtStart()
     end
 }
 
@@ -362,6 +361,36 @@ function JumpTo01(value)
     end
 end
 
+-- Move all control here
+gPlayController = PlayController:Create
+{
+    OnPlay = function()
+        playButton:TurnOn()
+        stopButton:TurnOff()
+    end,
+    OnPause = function()
+        playButton:TurnOff()
+    end,
+    OnAtStart = function()
+        playButton:TurnOff()
+        stopButton:TurnOn()
+        trackingTween = Tween:Create(0, 1, trackTime)
+        gTrackBar:SetValue01(0)
+        if gConversation then
+            gConversation.sequence:JumpTo01(0)
+        end
+    end,
+    OnAtEnd = function()
+        playButton:TurnOff()
+        stopButton:TurnOn()
+        trackingTween = Tween:Create(1, 1, trackTime)
+        gTrackBar:SetValue01(1)
+        if gConversation then
+            gConversation.sequence:JumpTo01(1)
+        end
+    end
+}
+
 function handleInput()
     if Keyboard.JustPressed(KEY_L) then
         local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_3.txt", "rb")
@@ -384,6 +413,13 @@ function handleInput()
         end
     end
 
+    if Keyboard.JustPressed(KEY_SPACE) and gConversation then
+        if gPlayController:IsPlaying() then
+            gPlayController:DoPause()
+        else
+            gPlayController:DoPlay()
+        end
+    end
 
 
     if Keyboard.JustPressed(KEY_1) then JumpTo01(0.05) end
@@ -440,6 +476,10 @@ function update()
         trackingTween:Update()
         gTrackBar:SetValue01(trackingTween:Value())
         gConversation.sequence:Update()
+
+        if trackingTween:IsFinished() then
+            gPlayController:DoAtEnd()
+        end
     end
 
 
@@ -448,6 +488,10 @@ function update()
     end
 
     gTrackBar:Render(gRenderer)
+
+    -- Measure text does not account for new lines.
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 35, gFont:MeasureText("Hello\no"))
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 45, gFont:MeasureText("Helloo"))
 
     gFont:AlignText("left", "top")
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner:")
