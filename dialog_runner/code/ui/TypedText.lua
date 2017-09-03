@@ -205,6 +205,8 @@ end
 
 function TypedText.Pagify(bounds, text, font)
 
+    print("PAGIFY:", text)
+
     local boundsWidth = bounds:Width()
     local boundsHeight = bounds:Height()
 
@@ -216,7 +218,7 @@ function TypedText.Pagify(bounds, text, font)
 
     local pageList = {{string.sub(text, start, finish)}}
     while finish < #text do
-        start, finish = font:NextLine(text, finish, boundsWidth)
+        start, finish = font:NextLine(text, finish +1, boundsWidth)
 
         -- If we're going to overflow
         if (currentHeight + faceHeight) > boundsHeight then
@@ -224,6 +226,7 @@ function TypedText.Pagify(bounds, text, font)
             currentHeight = 0
             table.insert(pageList, {string.sub(text, start, finish)})
         else
+
             table.insert(pageList[#pageList], string.sub(text, start, finish))
         end
         currentHeight = currentHeight + faceHeight
@@ -234,5 +237,6 @@ function TypedText.Pagify(bounds, text, font)
         pageList[k] = table.concat(v)
     end
 
+    PrintTable(pageList)
     return pageList
 end

@@ -6,7 +6,7 @@ Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_4_newlines.txt"
+gPath = "example_5.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
@@ -481,8 +481,22 @@ function update()
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 135, gFont:MeasureText("Hello\no"))
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 145, gFont:MeasureText("Helloo"))
 
-    gFont:AlignText("left", "top")
-    gFont:DrawText2d(gRenderer, 50, screenH - 145, "Oh.\nI see now.")
+    -- Trying to find out where the double break is coming from
+    -- do
+    --     gFont:AlignText("left", "top")
+    --     -- gFont:DrawText2d(gRenderer, 50, screenH - 145, "Oh.\nI see now.")
+
+    --     local cache = gFont:CacheText2d(50, screenH - 145, "Oh.\nI see now.")
+    --     gFont:DrawCache(gRenderer, cache, 0.5)
+
+    --     local t = Textbox.CreateFixed(gRenderer, 0, 0, 150, 100,
+    --         {
+    --             font = gFont,
+    --             text = "Oh.\nI see now.",
+    --         })
+    --     t:JumpTo01(0.5)
+    --     t:Render(gRenderer)
+    -- end
 
     gFont:AlignText("left", "top")
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner:")
