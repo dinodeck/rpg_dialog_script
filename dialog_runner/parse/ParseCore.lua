@@ -390,11 +390,10 @@ function CreateContext(content)
                         buffer = buffer .. v
                     end
                 else
-                    buffer = buffer .. ' ' .. v
+                    buffer = buffer .. '\n' .. v
                 end
 
             end
-
             table.insert(current.text, buffer)
             current.lineList = nil
 

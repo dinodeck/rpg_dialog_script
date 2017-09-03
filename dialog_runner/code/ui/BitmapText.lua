@@ -23,6 +23,9 @@ function BitmapText:Create(def)
     }
     this.mSprite:SetTexture(this.mTexture)
 
+    this.mLookUp['\n'] = { uv = this.mLookUp[' '].uv, stepX = 0 }
+    this.mLookUp['\r'] = { uv = this.mLookUp[' '].uv, stepX = 0 }
+
     setmetatable(this, self)
     return this
 end
@@ -325,33 +328,37 @@ function BitmapText:NextLine(text, cursor, maxWidth)
         cursor = cursor + 1
     end
 
-    local start = cursor
+    local safeCursor = cursor
     local finish = cursor + 1
 
     local prevC = string.sub(text, cursor, cursor)
-    local prevNonWhite = -1
 
     local pixelWidth = 0
-    local pixelWidthStart = 0
+    local safePixelWidth = 0
 
     for i = cursor + 1, string.len(text) do
         local c = string.sub(text, i, i)
         local finishW = self:GlyphWidth(prevC)--self.mGlyphW;
 
-        if start == cursor or
-            (pixelWidth  + finishW) < maxWidth or
-            maxWidth == -1 then
+        local foundNextLine = maxWidth ~= -1 and
+            safeCursor ~= cursor and
+            (pixelWidth  + finishW) >= maxWidth
+        foundNextLine = foundNextLine or c == '\n'
+
+        if not foundNextLine then
 
             if self:IsWhiteSpace(c) then
-                start = math.max(cursor, i - 1)
-                pixelWidthStart = pixelWidth
-                prevNonWhite = prevC
+                safeCursor = math.max(cursor, i - 1)
+                safePixelWidth = pixelWidth
             end
 
             pixelWidth = pixelWidth + finishW
         else
             finishW = self:GlyphWidth(prevC)
-            return cursor, start + 1, pixelWidthStart + finishW
+            if c == '\n' then
+                safeCursor = math.max(cursor, i - 1)
+            end
+            return cursor, safeCursor + 1, safePixelWidth + finishW
         end
 
         prevC = c;

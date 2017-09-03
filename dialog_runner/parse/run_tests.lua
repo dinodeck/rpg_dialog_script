@@ -91,23 +91,16 @@ tests =
         end
     },
     {
-        name = "Speech lines are joined by default",
+        name = "Single line breaks are preserved.",
         test = function()
-            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
+            local testTable = {{speaker = "null", text = {"It was really dark\nthat's why we didn't see him."} }}
             return AreTablesEqual(DoParse("null:It was really dark\nthat's why we didn't see him."), testTable)
-        end
-    },
-    {
-        name = "Extra space before speech line break is ignored",
-        test = function()
-            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
-            return AreTablesEqual(DoParse("null:It was really dark \nthat's why we didn't see him."), testTable)
         end
     },
     {
         name = "Extra space after speech line break is ignored",
         test = function()
-            local testTable = {{speaker = "null", text = {"It was really dark that's why we didn't see him."} }}
+            local testTable = {{speaker = "null", text = {"It was really dark\nthat's why we didn't see him."} }}
             return AreTablesEqual(DoParse("null:It was really dark \n that's why we didn't see him."), testTable)
         end
     },

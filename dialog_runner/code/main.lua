@@ -6,7 +6,7 @@ Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_3.txt"
+gPath = "example_4_newlines.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
@@ -393,7 +393,10 @@ gPlayController = PlayController:Create
 
 function handleInput()
     if Keyboard.JustPressed(KEY_L) then
-        local f = io.open("code/project_how_to_rpg/projects/dialog_scripts/example_3.txt", "rb")
+
+        local path = string.format("code/project_how_to_rpg/projects/dialog_scripts/%s", gPath)
+
+        local f = io.open(path, "rb")
         local content = f:read("*all")
         f:close()
         local script, result = DoParse(content)
@@ -457,21 +460,6 @@ local errorLines = nil
 local errorLastLine = -1
 function update()
 
-    -- local tt = TypedText:Create({renderer = gRenderer})
-
-    -- local b = tt.mBounds
-
-    -- -- b:Scale01(0.3)
-    -- tt:DrawBounds()
-    -- b:Shrink(10)
-    -- tt:DrawBounds()
-    -- gRenderer:AlignText("center", "center")
-    -- gRenderer:DrawText2d(b:Center(), "Hello")
-
-    -- local b1 = tt.mBounds
-    -- local b = Bound.FromLimits(b1:Left(), b1:Bottom(), b1:Right(), b1:Top())
-    -- b:Render(gRenderer)
-
     if playButton:IsOn() then
         trackingTween:Update()
         gTrackBar:SetValue01(trackingTween:Value())
@@ -490,8 +478,11 @@ function update()
     gTrackBar:Render(gRenderer)
 
     -- Measure text does not account for new lines.
-    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 35, gFont:MeasureText("Hello\no"))
-    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 45, gFont:MeasureText("Helloo"))
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 135, gFont:MeasureText("Hello\no"))
+    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 145, gFont:MeasureText("Helloo"))
+
+    gFont:AlignText("left", "top")
+    gFont:DrawText2d(gRenderer, 50, screenH - 145, "Oh.\nI see now.")
 
     gFont:AlignText("left", "top")
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner:")
@@ -521,7 +512,7 @@ function update()
     local loadY = 156
     gIndicator:SetPosition(loadX - 10, loadY - 5)
     gFont:AlignText("left", "top")
-    gFont:DrawText2d(gRenderer, loadX, loadY, "PATH: " .. gPath)
+    gFont:DrawText2d(gRenderer, loadX, loadY, "PATH:\n " .. gPath)
 
     if MouseInTracker() then
         local cPos = ClampMouseToTracker()
