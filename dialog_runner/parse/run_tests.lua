@@ -125,7 +125,35 @@ tests =
             return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
         end
     },
-
+    {
+        name = "Null tag at end of line isn't added to speech",
+        test = function()
+            local testTable = {{speaker = "Bob", text = {"Hello"} }}
+            return AreTablesEqual(DoParse("Bob:\nHello<null>"), testTable)
+        end
+    },
+    -- Bob:Hello<null>\nWorld <- this should work correctly
+    -- {
+    --     name = "Unclosed tag gives error",
+    --     test = function()
+    --         local tree, result = DoParse("bob:<slow>Hello")
+    --         return result.isError == true
+    --     end
+    -- },
+    -- {
+    --     name = "Orphan close tag gives error",
+    --     test = function()
+    --         local tree, result = DoParse("bob:</slow>Hello")
+    --         return result.isError == true
+    --     end
+    -- },
+    -- {
+    --     name = "Unclosed tag gives error, even with nested tags",
+    --     test = function()
+    --         local tree, result = DoParse("bob:<slow><slow>Hello</slow>")
+    --         return result.isError == true
+    --     end
+    -- }
     -- All the above tests should return text as a table not a string
     -- Then later there needs to be a bit of clever mungery to get it to look correct
 

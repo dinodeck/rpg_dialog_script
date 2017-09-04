@@ -246,6 +246,30 @@ function MaEmptyLine:Match()
     self.mState = eMatch.Failure
 end
 
+MaTag = {}
+MaTag.__index = MaTag
+function MaTag:Create(context)
+    local this =
+    {
+        mId = "MaTag",
+        mName = "Tag Matcher",
+        mContext = context,
+        mState = eMatch.Ongoing,
+        mAccumulator = {}
+    }
+
+    setmetatable(this, self)
+    return this
+end
+
+function MaTag:Match()
+    if self.mState ~= eMatch.Ongoing then
+        return
+    end
+
+    self.mState = eMatch.Failure
+end
+
 
 -- Maybe these blocks have enter and exit functions?
 ReaderActions =
@@ -267,8 +291,13 @@ ReaderActions =
         { MaSpeaker,    "SPEECH_UNIT_START" },
         { MaSpeechLine, "SPEECH_UNIT" },
         { MaWhiteSpace, "SPEECH_UNIT" },
+        { MaTag,        "NOT_IMPLEMENTED"},
         { MaEnd,        "FINISH"      },
     },
+    -- TAG =
+    -- {
+    --     { MaTag, "TAG" }
+    -- },
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED",
     FINISH = "FINISH"
 }
@@ -421,9 +450,13 @@ function Reader:Create(matchDef, context)
     return this
 end
 
+function Reader:GetMatchers()
+    return self.mMatchList
+end
+
 function Reader:IsFinished()
 
-    if (not next(self.mMatchList)) or   -- 1. The matcher list is empty
+    if (not next(self:GetMatchers())) or   -- 1. The matcher list is empty
         self:ReadFailed() or            -- 2. All matches have failed -> error
         self:FoundMatch() then          -- 3. One match has passed
         return true
@@ -433,7 +466,7 @@ function Reader:IsFinished()
 end
 
 function Reader:ReadFailed()
-    return not Any(self.mMatchList,
+    return not Any(self:GetMatchers(),
         function(match)
             local state = match.mState
             return state == eMatch.Ongoing or state == eMatch.Success
@@ -445,7 +478,7 @@ function Reader:FoundMatch()
 end
 
 function Reader:FindMatch()
-      for k, v in ipairs(self.mMatchList) do
+      for k, v in ipairs(self:GetMatchers()) do
         local state = v.mState
         if state == eMatch.Success then
             return v
@@ -455,7 +488,7 @@ function Reader:FindMatch()
 end
 
 function Reader:GetMatchAction(match)
-    for k, v in ipairs(self.mMatchList) do
+    for k, v in ipairs(self:GetMatchers()) do
         if v == match then
             return self.mMatchActionList[k]
         end
@@ -465,7 +498,7 @@ end
 
 function Reader:Step()
     local context = self.mContext
-    for k, v in ipairs(self.mMatchList) do
+    for k, v in ipairs(self:GetMatchers()) do
         local result = v:Match()
     end
 end
@@ -474,7 +507,7 @@ function Reader:GetError()
 
     local lines = {}
 
-    for k, v in ipairs(self.mMatchList) do
+    for k, v in ipairs(self:GetMatchers()) do
         if v.mError ~= nil and v.mError ~= "" then
             table.insert(lines, "Possible error: " .. v.mError)
         end
