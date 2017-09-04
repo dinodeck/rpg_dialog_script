@@ -24,18 +24,30 @@ end
 
 printf = function(...) print(string.format(...)) end
 
+function Filter(t, p)
+    local _result = {}
+    for k, v in ipairs(t) do
+        if p(v, k) then
+            table.insert(_result, v)
+        end
+    end
+    return _result
+end
+
 function StartsWith(str, start)
     return str:find(start) == 1
 end
 
 function RunTests(tests)
 
-    local isFilter = false
-    local filter = ""
 
     if arg[1] == "--filter" then
         isFilter = true
-        filter = tostring(arg[2])
+        local prefix = tostring(arg[2])
+        tests = Filter(tests,
+                       function(test)
+                          return StartsWith(test.name, prefix)
+                       end)
     end
 
     passCount = 0
@@ -45,7 +57,6 @@ function RunTests(tests)
     local testsRun = 0
     for k, v in ipairs(tests) do
 
-        if not isFilter or (isFilter and StartsWith(v.name, filter)) then
             printf("TEST: %s", v.name)
             local test_result = false
             local isError, msg = pcall(function() test_result = v.test() end)
@@ -58,12 +69,11 @@ function RunTests(tests)
             if not isError then
                 printf("ERROR: %s", tostring(msg))
             end
-            testsRun = testsRun + 1
             print("")
-        end
+
     end
 
-    printf("Tests passed [%d/%d]", passCount, testsRun)
+    printf("Tests passed [%d/%d]", passCount, #tests)
 
     if #failureList > 0 then
         print("FAILURES:")
