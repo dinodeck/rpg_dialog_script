@@ -267,6 +267,10 @@ function MaTag:Match()
         return
     end
 
+    local current = self.mContext.syntax_tree[#self.mContext.syntax_tree]
+
+    if not current then return end
+
     self.mState = eMatch.Failure
 end
 
@@ -374,10 +378,20 @@ function CreateContext(content)
             self:AddLine('\n')
         end,
 
+        CloseAnyOpenTag = function(self)
+            local current = self.syntax_tree[#self.syntax_tree]
+
+            if not current then return end
+
+            current.openTag = nil
+        end,
+
         CloseAnyOpenSpeech = function(self)
             local current = self.syntax_tree[#self.syntax_tree]
 
             if not current then return end
+
+            self:CloseAnyOpenTag()
 
             -- Avoid double spaces
             for k, v in ipairs(current.lineList) do
