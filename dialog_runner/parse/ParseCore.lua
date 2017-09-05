@@ -530,11 +530,18 @@ function Reader:IsFinished()
 end
 
 function Reader:ReadFailed()
-    return not Any(self:GetMatchers(),
+    local onlyFailsRemain = not Any(self:GetMatchers(),
         function(match)
             local state = match.mState
             return state == eMatch.Ongoing or state == eMatch.Success
         end)
+
+    local haltingFailure = Any(self:GetMatchers(),
+                            function(match)
+                                return match.mState == eMatch.HaltFailure
+                            end)
+
+    return onlyFailsRemain or haltingFailure
 end
 
 function Reader:FoundMatch()
@@ -615,7 +622,13 @@ function DoParse(data, tagTable)
             reader:Step()
         end
 
-        if reader:FoundMatch() then
+
+        if reader:ReadFailed() then
+            print("Reader failed")
+            context.errorLines = reader:GetError()
+            context.isError = true
+            reader = nil
+        elseif reader:FoundMatch() then
             local match = reader:FindMatch()
             printf("Found match %s", match.mName)
             ProcessMatch(match, context)
@@ -632,14 +645,8 @@ function DoParse(data, tagTable)
                 context:AdvanceCursor()
                 print("Reader", action)
             end
-
-
-        elseif reader:ReadFailed() then
-            print("Reader failed")
-            context.errorLines = reader:GetError()
-            context.isError = true
-            reader = nil
         end
+
     end
 
     PrintTable(context.syntax_tree)
