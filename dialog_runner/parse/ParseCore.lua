@@ -310,6 +310,12 @@ function MaTag:Match()
         table.insert(self.mAccumulator, c)
     end
 
+    if self.mContext:AtEnd() then
+        self.mError = "Reading tag failed."
+        self.mState = eMatch.Failure
+        return
+    end
+
     if c == "<" then
         self.mIsOpen = true
         self.mAccumulator = {}
