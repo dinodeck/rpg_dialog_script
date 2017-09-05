@@ -255,11 +255,17 @@ function MaTag:Create(context)
         mName = "Tag Matcher",
         mContext = context,
         mState = eMatch.Ongoing,
-        mAccumulator = {}
+        mAccumulator = {},
+        mIsOpen = false
     }
 
     setmetatable(this, self)
     return this
+end
+
+function  MaTag:Reset()
+    self.mIsOpen = false
+    self.mAccumulator = {}
 end
 
 function MaTag:Match()
@@ -267,11 +273,35 @@ function MaTag:Match()
         return
     end
 
-    local current = self.mContext.syntax_tree[#self.mContext.syntax_tree]
+    local c = self.mContext:Byte()
 
-    if not current then return end
+    if self.mIsOpen then
+        if c == '\n' then
+            self:Reset()
+            return
+        end
 
-    self.mState = eMatch.Failure
+        if c == '>' then
+            self.mIsOpen = false
+            if #self.mAccumulator > 1 then
+                table.insert(self.mAccumulator, c)
+                printf("Tag matched [%s]", table.concat(self.mAccumulator))
+                return
+            else
+                self:Reset()
+                return
+            end
+        end
+        table.insert(self.mAccumulator, c)
+    end
+
+    if c == "<" then
+        self.mIsOpen = true
+        self.mAccumulator = {}
+        table.insert(self.mAccumulator, c)
+    end
+
+    -- self.mState = eMatch.Failure
 end
 
 
@@ -287,6 +317,7 @@ ReaderActions =
     SPEECH_UNIT_START =
     {
         { MaSpeechLine, "SPEECH_UNIT" },
+        { MaTag,        "NOT_IMPLEMENTED"},
         { MaWhiteSpace, "SPEECH_UNIT_START" },
     },
     SPEECH_UNIT =
@@ -295,7 +326,6 @@ ReaderActions =
         { MaSpeaker,    "SPEECH_UNIT_START" },
         { MaSpeechLine, "SPEECH_UNIT" },
         { MaWhiteSpace, "SPEECH_UNIT" },
-        { MaTag,        "NOT_IMPLEMENTED"},
         { MaEnd,        "FINISH"      },
     },
     -- TAG =
@@ -378,20 +408,20 @@ function CreateContext(content)
             self:AddLine('\n')
         end,
 
-        CloseAnyOpenTag = function(self)
-            local current = self.syntax_tree[#self.syntax_tree]
+        -- CloseAnyOpenTag = function(self)
+        --     local current = self.syntax_tree[#self.syntax_tree]
 
-            if not current then return end
+        --     if not current then return end
 
-            current.openTag = nil
-        end,
+        --     current.openTag = nil
+        -- end,
 
         CloseAnyOpenSpeech = function(self)
             local current = self.syntax_tree[#self.syntax_tree]
 
             if not current then return end
 
-            self:CloseAnyOpenTag()
+            -- self:CloseAnyOpenTag()
 
             -- Avoid double spaces
             for k, v in ipairs(current.lineList) do
