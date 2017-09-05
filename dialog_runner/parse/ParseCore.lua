@@ -10,6 +10,7 @@ eMatch =
 {
     Success = "Success",
     Failure = "Failure",
+    HaltFailure = "HaltFailure",
     Ongoing = "Ongoing"
 }
 function IsWhiteSpace(byte)
@@ -268,6 +269,10 @@ function  MaTag:Reset()
     self.mAccumulator = {}
 end
 
+function MaTag:StripTag(str)
+    return string.sub(str, 2, -2)
+end
+
 function MaTag:Match()
     if self.mState ~= eMatch.Ongoing then
         return
@@ -285,7 +290,17 @@ function MaTag:Match()
             self.mIsOpen = false
             if #self.mAccumulator > 1 then
                 table.insert(self.mAccumulator, c)
-                printf("Tag matched [%s]", table.concat(self.mAccumulator))
+                self.mTagFull = table.concat(self.mAccumulator)
+                self.mTag = self:StripTag(self.mTagFull)
+                printf("Tag matched [%s]", self.mTagFull)
+
+                if not self.mContext:GetTag(self.mTag) then
+                    self.mError = string.format("Unknown tag [%s]", self.mTagFull)
+                    self.mState = eMatch.HaltFailure
+                    return
+                end
+
+                self.mState = eMatch.Success
                 return
             else
                 self:Reset()
@@ -337,7 +352,7 @@ ReaderActions =
 }
 
 
-function CreateContext(content)
+function CreateContext(content, tagTable)
     local this =
     {
         content = content,
@@ -346,6 +361,7 @@ function CreateContext(content)
         column_number = 0,
         syntax_tree = {},
         is_error = false,
+        tagTable = tagTable or {},
 
         Byte = function(self)
             return self.content:sub(self.cursor, self.cursor)
@@ -416,6 +432,10 @@ function CreateContext(content)
         --     current.openTag = nil
         -- end,
 
+        GetTag = function(self, id)
+            return self.tagTable[id]
+        end,
+
         CloseAnyOpenSpeech = function(self)
             local current = self.syntax_tree[#self.syntax_tree]
 
@@ -482,7 +502,7 @@ function Reader:Create(matchDef, context)
     {
         mMatchList = {},
         mMatchActionList = {},
-        mContext = context
+        mContext = context,
     }
 
     for k, v in ipairs(matchDef) do
@@ -563,7 +583,12 @@ end
 
 function ProcessMatch(match, context)
     --print(match.mId)
-    if match.mId == "MaSpeaker" then
+
+    if match.mId == "MaTag" then
+
+
+
+    elseif match.mId == "MaSpeaker" then
         context:CloseAnyOpenSpeech()
         local name = match:GetName()
         context:OpenSpeech(name)
@@ -579,8 +604,8 @@ function ProcessMatch(match, context)
     end
 end
 
-function DoParse(data)
-    local context = CreateContext(data)
+function DoParse(data, tagTable)
+    local context = CreateContext(data, tagTable)
     local reader = Reader:Create(ReaderActions.START, context)
 
     while reader ~= nil do
