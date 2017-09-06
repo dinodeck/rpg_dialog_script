@@ -156,6 +156,40 @@ tests =
             return AreTablesEqual(DoParse("Bob:\nHello<null><null>", tagTable), testTable)
         end
     },
+    {
+        name = "Embedded tag isn't included in speech",
+        test = function()
+        local tagTable = { ["null"] = { type = "one" }}
+            local testTable = {{speaker = "Bob", text = {"Hello"} }}
+            return AreTablesEqual(DoParse("Bob:\nHel<null>lo", tagTable), testTable)
+        end
+    },
+    {
+        name = "First speech part as tag is removed",
+        test = function()
+        local tagTable = { ["null"] = { type = "one" }}
+            local testTable = {{speaker = "Bob", text = {"Hello"} }}
+            return AreTablesEqual(DoParse("Bob:<null>Hello", tagTable), testTable)
+        end
+    },
+    {
+        name = "First speech part before newline as tag is removed",
+        test = function()
+            local tagTable = { ["null"] = { type = "one" }}
+            local testTable = {{speaker = "Bob", text = {"Hello"} }}
+            return AreTablesEqual(DoParse("Bob:<null>\nHello", tagTable), testTable)
+        end
+    },
+    {
+        name = "All space is trimmed before tag",
+        test = function()
+            local tagTable = { ["null"] = { type = "one" }}
+            return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>", tagTable),
+                                  DoParse("Bob:\nHello\n\n\n\n", tagTable))
+        end
+    },
+
+
     -- Bob:Hello<null>\nWorld <- this should work correctly
     -- {
     --     name = "Unclosed tag gives error",

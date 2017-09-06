@@ -24,6 +24,18 @@ function IsWhiteSpace(byte)
     return false
 end
 
+function IsEmptyString(str)
+
+    for i = 1, #str do
+        local c = str:sub(i,i)
+        if not IsWhiteSpace(c) then
+            return false
+        end
+    end
+
+    return true
+end
+
 MaWhiteSpace = {}
 MaWhiteSpace.__index = MaWhiteSpace
 function MaWhiteSpace:Create(context)
@@ -458,10 +470,18 @@ function CreateContext(content, tagTable)
             -- }
             -- Tags may run over lines
             print("processing tags")
-            for line, entry in ipairs(entryList) do
+
+
+            local refEntryList = {}
+            for k, v in ipairs(entryList) do
+                refEntryList[k] = {line = v}
+            end
+
+
+            for index, entry in ipairs(refEntryList) do
 
                 -- iterate through the line char by char
-                local lineContext = CreateContext(entry, self.tagTable)
+                local lineContext = CreateContext(entry.line, self.tagTable)
                 local maTag = MaTag:Create(lineContext)
 
                 while maTag.mState == eMatch.Ongoing do
@@ -479,9 +499,26 @@ function CreateContext(content, tagTable)
                         -- Worry about storing this data later
                         local startIndex = 1
                         local tag = maTag.mTagFull
-                        local i, j = string.find(entry, tag, startIndex, true)
-                        entryList[line] = entryList[line]:gsub(tag, "", 1)
-                        print("Tag: ", i, j, entry:sub(i, j))
+                        local i, j = string.find(entry.line, tag, startIndex, true)
+                        print("Tag: ", i, j, entry.line:sub(i, j))
+                        refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
+                        printf("After remove op: [%s]", refEntryList[index].line)
+                        --
+                        -- WE'RE REMOVE LINES, SO DON'T STORE INDICES TO LINES
+                        -- STORE REFENCES TO THEM, THIS MIGHT MEAN THEY NEED TO BE PUT IN
+                        -- A TABLE, THAT'S OK.
+                        -- THEY CAN BE DEREFERENCED LATER
+                        --
+
+                        -- Space trimming, this may need to be a little cleverer, we'll see!
+                        -- Trims space ... maybe first line only?
+                        refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
+
+                        if IsEmptyString(refEntryList[index].line) then
+                            refEntryList[index].kill = true
+                        end
+
+
 
                         maTag:Reset()
                     end
@@ -490,6 +527,14 @@ function CreateContext(content, tagTable)
 
             end
 
+            entryList = {}
+            for k, v in ipairs(refEntryList) do
+                if not v.kill then
+                    table.insert(entryList, v.line)
+                end
+            end
+
+            return entryList
         end,
 
         CloseAnyOpenSpeech = function(self)
@@ -545,7 +590,7 @@ function CreateContext(content, tagTable)
             end
 
             table.insert(current.text, buffer)
-            self:ProcessTagsInBuffer(current.text, current)
+            current.text = self:ProcessTagsInBuffer(current.text, current)
             current.lineList = nil
 
         end
