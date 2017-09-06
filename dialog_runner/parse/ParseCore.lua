@@ -266,6 +266,7 @@ end
 
 function  MaTag:Reset()
     self.mIsOpen = false
+    self.mState = eMatch.Ongoing
     self.mAccumulator = {}
 end
 
@@ -296,6 +297,8 @@ function MaTag:Match()
                 printf("Tag matched [%s]", self.mTagFull)
 
                 if not self.mContext:GetTag(self.mTag) then
+                    printf("Unknown tag [%s]", self.mTag)
+                    PrintTable(self.mContext.tagTable)
                     self.mError = string.format("Unknown tag [%s]", self.mTagFull)
                     self.mState = eMatch.HaltFailure
                     return
@@ -458,7 +461,7 @@ function CreateContext(content, tagTable)
             for line, entry in ipairs(entryList) do
 
                 -- iterate through the line char by char
-                local lineContext = CreateContext(entry)
+                local lineContext = CreateContext(entry, self.tagTable)
                 local maTag = MaTag:Create(lineContext)
 
                 while maTag.mState == eMatch.Ongoing do
@@ -468,7 +471,19 @@ function CreateContext(content, tagTable)
                     if maTag.mState == eMatch.HaltFailure then
                         self.isError = true
                         self.errorLines = eMatch.mError
-                        return false
+                    elseif maTag.mState == eMatch.Success then
+                        print("Success", maTag.mTag)
+
+                        -- 1. Remove it
+                        -- This is all a bit hard coded for now
+                        -- Worry about storing this data later
+                        local startIndex = 1
+                        local tag = maTag.mTagFull
+                        local i, j = string.find(entry, tag, startIndex, true)
+                        entryList[line] = entryList[line]:gsub(tag, "", 1)
+                        print("Tag: ", i, j, entry:sub(i, j))
+
+                        maTag:Reset()
                     end
 
                 end
