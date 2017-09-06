@@ -125,22 +125,29 @@ tests =
             return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
         end
     },
+    -- {
+    --     name = "quick test",
+    --     test = function()
+    --         local tree, result = DoParse("Bob:\nHello\n\nThis is more test yo yo yo")
+    --         return result.isError == false
+    --     end
+    -- },
     {
         name = "Unregistered tag throws error",
         test = function()
 
-            local tree, result = DoParse("Bob:\nHello<null>", tagTable)
+            local tree, result = DoParse("Bob:\nHello<null>")
             return result.isError == true
         end
     },
-    {
-        name = "Tag at end of line isn't included in speech",
-        test = function()
-        local tagTable = { ["null"] = { type = "one" }}
-            local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:\nHello<null>", tagTable), testTable)
-        end
-    },
+    -- {
+    --     name = "Tag at end of line isn't included in speech",
+    --     test = function()
+    --     local tagTable = { ["null"] = { type = "one" }}
+    --         local testTable = {{speaker = "Bob", text = {"Hello"} }}
+    --         return AreTablesEqual(DoParse("Bob:\nHello<null>", tagTable), testTable)
+    --     end
+    -- },
     -- Bob:Hello<null>\nWorld <- this should work correctly
     -- {
     --     name = "Unclosed tag gives error",

@@ -274,6 +274,7 @@ function MaTag:StripTag(str)
 end
 
 function MaTag:Match()
+
     if self.mState ~= eMatch.Ongoing then
         return
     end
@@ -338,7 +339,6 @@ ReaderActions =
     SPEECH_UNIT_START =
     {
         { MaSpeechLine, "SPEECH_UNIT" },
-        { MaTag,        "NOT_IMPLEMENTED"},
         { MaWhiteSpace, "SPEECH_UNIT_START" },
     },
     SPEECH_UNIT =
@@ -349,10 +349,6 @@ ReaderActions =
         { MaWhiteSpace, "SPEECH_UNIT" },
         { MaEnd,        "FINISH"      },
     },
-    -- TAG =
-    -- {
-    --     { MaTag, "TAG" }
-    -- },
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED",
     FINISH = "FINISH"
 }
@@ -366,7 +362,7 @@ function CreateContext(content, tagTable)
         line_number = 1,
         column_number = 0,
         syntax_tree = {},
-        is_error = false,
+        isError = false,
         tagTable = tagTable or {},
 
         Byte = function(self)
@@ -442,6 +438,45 @@ function CreateContext(content, tagTable)
             return self.tagTable[id]
         end,
 
+        ProcessTagsInBuffer = function(self, entryList, current)
+
+            -- entryList is the list of text entries a person is saying.
+            --
+            -- Bob:
+            -- <slow>Hello there
+            --
+            -- Mike</slow>
+            --
+            -- to this:
+            --
+            -- {
+            --     "<slow>Hello there"
+            --     "Mike</slow>"
+            -- }
+            -- Tags may run over lines
+            print("processing tags")
+            for line, entry in ipairs(entryList) do
+
+                -- iterate through the line char by char
+                local lineContext = CreateContext(entry)
+                local maTag = MaTag:Create(lineContext)
+
+                while maTag.mState == eMatch.Ongoing do
+                    maTag:Match()
+                    lineContext:AdvanceCursor()
+
+                    if maTag.mState == eMatch.HaltFailure then
+                        self.isError = true
+                        self.errorLines = eMatch.mError
+                        return false
+                    end
+
+                end
+
+            end
+
+        end,
+
         CloseAnyOpenSpeech = function(self)
             local current = self.syntax_tree[#self.syntax_tree]
 
@@ -493,7 +528,9 @@ function CreateContext(content, tagTable)
                 end
 
             end
+
             table.insert(current.text, buffer)
+            self:ProcessTagsInBuffer(current.text, current)
             current.lineList = nil
 
         end
