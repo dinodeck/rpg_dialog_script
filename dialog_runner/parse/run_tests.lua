@@ -173,6 +173,15 @@ tests =
         end
     },
     {
+        name = "First speech part as tag is removed including space",
+        test = function()
+        local tagTable = { ["null"] = { type = "one" }}
+            return AreTablesEqual(DoParse("Bob: <null>Hello", tagTable),
+                                  DoParse("Bob: Hello", tagTable),
+             testTable)
+        end
+    },
+    {
         name = "First speech part before newline as tag is removed",
         test = function()
             local tagTable = { ["null"] = { type = "one" }}
@@ -186,6 +195,14 @@ tests =
             local tagTable = { ["null"] = { type = "one" }}
             return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>", tagTable),
                                   DoParse("Bob:\nHello\n\n\n\n", tagTable))
+        end
+    },
+    {
+        name = "All space is trimmed before and after tag",
+        test = function()
+            local tagTable = { ["null"] = { type = "one" }}
+            return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>\n\n\n\nWorld", tagTable),
+                                  DoParse("Bob:\nHello\n\n\n\n\n\n\n\nWorld", tagTable))
         end
     },
 
