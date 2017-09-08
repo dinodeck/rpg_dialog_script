@@ -2,7 +2,41 @@ if not Asset then
 require("HigherOrder")
 end
 
+--
+-- The original architecture for this didn't really pan out for tags
+-- and rather than go back and rethink instead added on a bunch of hacks
+-- Here be dragons
+--
+
 printf = function(...) print(string.format(...)) end -- <- need a util class
+
+StrToArray = function(str)
+
+    local t = {}
+
+    for i = 1, #str do
+        local c = str:sub(i,i)
+        table.insert(t, c)
+    end
+
+    return t
+
+end
+
+ArrayEndsWith = function(a, b)
+
+    local j = 0
+    for i = #b, 1, -1 do
+
+        if a[#a - j] ~= b[i] then
+            return false
+        end
+        j = j + 1
+    end
+
+    return true
+
+end
 
 eMatch =
 {
@@ -15,7 +49,8 @@ eMatch =
 eTag =
 {
     Short = "Short",
-    Wide = "Wide"
+    Wide = "Wide",
+    Cut = "Cut"
 }
 
 eTagState =
@@ -283,6 +318,7 @@ function MaTag:Create(context)
         mIsOpen = false, -- this for the parser to track where it is.
         mTagType = eTag.Short,
         mTagState = eTagState.Open,
+        mIsCut = false
     }
 
     setmetatable(this, self)
@@ -295,6 +331,7 @@ function  MaTag:Reset()
     self.mTagType = eTag.Short
     self.mTagState = eTagState.Open
     self.mAccumulator = {}
+    self.mIsCut = false
 end
 
 function MaTag:StripTag(str)
@@ -315,6 +352,42 @@ function MaTag:Match()
     end
 
     local c = self.mContext:Byte()
+
+    if self.mIsCut then
+
+
+
+        -- 2. Keep accumulating
+        table.insert(self.mAccumulator, c)
+
+        -- 3. Check for close tag if hit close brace
+        if c == ">" then
+
+            local endTag = string.format("</%s>", self.mTag)
+
+            local match = ArrayEndsWith(
+                self.mAccumulator,
+                StrToArray(endTag))
+
+            printf("In end match tag for cut: [%s] for [%s] [%s]", endTag, table.concat(self.mAccumulator), match)
+
+            if match then
+                self.mTagFull = table.concat(self.mAccumulator)
+                self.mState = eMatch.Success
+                return
+            end
+            -- else let it run to the end of the file
+        end
+
+        -- 1. At end? -> let the tag parser feed in the next
+        if self.mContext:AtEnd() then
+            print("END! current state: ", self.mState)
+            self.mError = "Found end of file before close tag."
+            self.mState = eMatch.HaltFailure
+            return
+        end
+        return
+    end
 
     if self.mIsOpen then
         if c == '\n' then
@@ -345,6 +418,15 @@ function MaTag:Match()
                     if self.mTagType == eTag.Short and self.mTagState == eTagState.Close then
                         self.mError = string.format("Short tag should never close [%s]", self.mTagFull)
                         self.mState = eMatch.HaltFailure
+                        return
+                    end
+
+                    if self.mTagType == eTag.Cut then
+                        -- Cut means we continue accumulating eveything until
+                        -- we hit the matching tag
+                        self.mIsOpen = false
+                        self.mIsCut = true
+                        self.mState = eMatch.Ongoing
                         return
                     end
 

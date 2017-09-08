@@ -212,11 +212,6 @@ tests =
             return AreTablesEqual(DoParse("Bob:<wide>Hello World</wide>", tagTable),
                                   DoParse("Bob: Hello World", tagTable))
         end
-
-        -- 1. If it's wide put the first one on the open stack
-        -- 2. If you meet a close pop the top of the stack and make sure they match
-        -- 3. Clear both as you find them
-        -- 4. Next test is nested tags
     },
     {
         name = "Unclosed tag gives error",
@@ -273,7 +268,41 @@ tests =
                 DoParse("bob:Hello", tagTable))
 
         end
-    }
+    },
+    {
+        name = "Cut script", --date between tags is removed
+        test = function()
+            local tagTable =
+            {
+                ["script"] = { type = "Cut" },
+            }
+            return AreTablesEqual(
+                DoParse("bob:<script>Words go here</script>Hello", tagTable),
+                DoParse("bob:Hello", tagTable))
+
+        end
+    },
+    {
+        name = "Multi-line cut script", --date between tags is removed
+        test = function()
+            local tagTable =
+            {
+                ["script"] = { type = "Cut" },
+            }
+
+            -- This fails because the entries are made into strings
+            -- but the tags cover multiple strings
+            -- this matters less for wide tags because they use the stack
+            -- therefore the matcher needs to go multiline
+
+            return AreTablesEqual(
+                DoParse("bob:\n<script>\n\nWords go here\n\n</script>\nHello", tagTable),
+                DoParse("bob:Hello", tagTable))
+        end
+    },
+
+    -- Cut
+
     -- All the above tests should return text as a table not a string
     -- Then later there needs to be a bit of clever mungery to get it to look correct
 
