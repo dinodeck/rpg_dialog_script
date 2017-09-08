@@ -544,13 +544,6 @@ function CreateContext(content, tagTable)
                         local i, j = string.find(entry.line, tag, startIndex, true)
                         print("Tag: ", i, j, entry.line:sub(i, j))
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
-                        printf("After remove op: [%s]", refEntryList[index].line)
-                        --
-                        -- WE'RE REMOVE LINES, SO DON'T STORE INDICES TO LINES
-                        -- STORE REFENCES TO THEM, THIS MIGHT MEAN THEY NEED TO BE PUT IN
-                        -- A TABLE, THAT'S OK.
-                        -- THEY CAN BE DEREFERENCED LATER
-                        --
 
                         -- Space trimming, this may need to be a little cleverer, we'll see!
                         -- Trims space ... maybe first line only?
@@ -560,7 +553,23 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                         end
 
-
+                        -- Was it an opening or a closing tag?
+                        print("WIDE? ", tag.mTag == eTag.Wide)
+                        if tag.mTag == eTag.Wide then
+                            if tag.mTagState == eTagState.Open then
+                                push
+                                {
+                                    name = maTag.mTag,
+                                    -- should store position too
+                                }
+                            else
+                                local top = pop()
+                                if top.name ~= maTag.mTag then
+                                    self.isError = true
+                                    self.errorLines = string.format("Unexpected closing tag [%s] expected [%s]",  maTag.mTag, top.name)
+                                end
+                            end
+                        end
 
                         maTag:Reset()
                     end
