@@ -143,7 +143,7 @@ tests =
     {
         name = "Tag at end of line isn't included in speech",
         test = function()
-        local tagTable = { ["null"] = { type = "one" }}
+        local tagTable = { ["null"] = { type = "short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Bob:\nHello<null>", tagTable), testTable)
         end
@@ -151,7 +151,7 @@ tests =
     {
         name = "Two tags at end of line aren't included in speech",
         test = function()
-        local tagTable = { ["null"] = { type = "one" }}
+        local tagTable = { ["null"] = { type = "short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Bob:\nHello<null><null>", tagTable), testTable)
         end
@@ -159,7 +159,7 @@ tests =
     {
         name = "Embedded tag isn't included in speech",
         test = function()
-        local tagTable = { ["null"] = { type = "one" }}
+        local tagTable = { ["null"] = { type = "short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Bob:\nHel<null>lo", tagTable), testTable)
         end
@@ -167,7 +167,7 @@ tests =
     {
         name = "First speech part as tag is removed",
         test = function()
-        local tagTable = { ["null"] = { type = "one" }}
+        local tagTable = { ["null"] = { type = "short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Bob:<null>Hello", tagTable), testTable)
         end
@@ -175,7 +175,7 @@ tests =
     {
         name = "First speech part as tag is removed including space",
         test = function()
-        local tagTable = { ["null"] = { type = "one" }}
+        local tagTable = { ["null"] = { type = "short" }}
             return AreTablesEqual(DoParse("Bob: <null>Hello", tagTable),
                                   DoParse("Bob: Hello", tagTable),
              testTable)
@@ -184,7 +184,7 @@ tests =
     {
         name = "First speech part before newline as tag is removed",
         test = function()
-            local tagTable = { ["null"] = { type = "one" }}
+            local tagTable = { ["null"] = { type = "short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             return AreTablesEqual(DoParse("Bob:<null>\nHello", tagTable), testTable)
         end
@@ -192,7 +192,7 @@ tests =
     {
         name = "All space is trimmed before tag",
         test = function()
-            local tagTable = { ["null"] = { type = "one" }}
+            local tagTable = { ["null"] = { type = "short" }}
             return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>", tagTable),
                                   DoParse("Bob:\nHello\n\n\n\n", tagTable))
         end
@@ -200,10 +200,23 @@ tests =
     {
         name = "All space is trimmed before and after tag",
         test = function()
-            local tagTable = { ["null"] = { type = "one" }}
+            local tagTable = { ["null"] = { type = "short" }}
             return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>\n\n\n\nWorld", tagTable),
                                   DoParse("Bob:\nHello\n\n\n\n\n\n\n\nWorld", tagTable))
         end
+    },
+    {
+        name = "Wide tags are remove from final text",
+        test = function()
+            local tagTable = { ["wide"] = { type = "wide" }}
+            return AreTablesEqual(DoParse("Bob:<wide>Hello World</wide>", tagTable),
+                                  DoParse("Bob: Hello World", tagTable))
+        end
+
+        -- 1. If it's wide put the first one on the open stack
+        -- 2. If you meet a close pop the top of the stack and make sure they match
+        -- 3. Clear both as you find them
+        -- 4. Next test is nested tags
     },
 
 

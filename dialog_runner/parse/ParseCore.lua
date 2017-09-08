@@ -1,5 +1,3 @@
--- require("StateStack")
-
 if not Asset then
 require("HigherOrder")
 end
@@ -13,6 +11,19 @@ eMatch =
     HaltFailure = "HaltFailure",
     Ongoing = "Ongoing"
 }
+
+eTag =
+{
+    Short = "Short",
+    Wide = "Wide"
+}
+
+eTagState =
+{
+    Open = "Open",
+    Close = "Close"
+}
+
 function IsWhiteSpace(byte)
     local whitespace = {' ', '\n', '\t'}
     for k, v in ipairs(whitespace) do
@@ -269,7 +280,8 @@ function MaTag:Create(context)
         mContext = context,
         mState = eMatch.Ongoing,
         mAccumulator = {},
-        mIsOpen = false
+        mTagType = eTag.One,
+        mTagState = eTagState.Open,
     }
 
     setmetatable(this, self)
@@ -279,6 +291,8 @@ end
 function  MaTag:Reset()
     self.mIsOpen = false
     self.mState = eMatch.Ongoing
+    self.mTagType = eTag.One
+    self.mTagState = eTagState.Open
     self.mAccumulator = {}
 end
 
@@ -308,7 +322,9 @@ function MaTag:Match()
                 self.mTag = self:StripTag(self.mTagFull)
                 printf("Tag matched [%s]", self.mTagFull)
 
-                if not self.mContext:GetTag(self.mTag) then
+                local tagDef = self.mContext:GetTag(self.mTag)
+                if tagDef then
+                else
                     printf("Unknown tag [%s]", self.mTag)
                     PrintTable(self.mContext.tagTable)
                     self.mError = string.format("Unknown tag [%s]", self.mTagFull)
@@ -470,6 +486,15 @@ function CreateContext(content, tagTable)
             -- }
             -- Tags may run over lines
             print("processing tags")
+
+            local tagStack = {}
+            local push = function(v)
+                table.insert(tagStack, v)
+            end
+
+            local pop = function(v)
+                table.remove(tagStack)
+            end
 
 
             local refEntryList = {}
@@ -692,13 +717,8 @@ end
 
 
 function ProcessMatch(match, context)
-    --print(match.mId)
 
-    if match.mId == "MaTag" then
-
-
-
-    elseif match.mId == "MaSpeaker" then
+    if match.mId == "MaSpeaker" then
         context:CloseAnyOpenSpeech()
         local name = match:GetName()
         context:OpenSpeech(name)
