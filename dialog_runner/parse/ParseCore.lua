@@ -280,6 +280,7 @@ function MaTag:Create(context)
         mContext = context,
         mState = eMatch.Ongoing,
         mAccumulator = {},
+        mIsOpen = false, -- this for the parser to track where it is.
         mTagType = eTag.One,
         mTagState = eTagState.Open,
     }
@@ -297,7 +298,14 @@ function  MaTag:Reset()
 end
 
 function MaTag:StripTag(str)
-    return string.sub(str, 2, -2)
+
+    -- Remove outer brackers
+    local start = 2
+    if self.mTagState == eTagState.Close then
+        start = start + 1 -- also strip the /
+    end
+
+    return string.sub(str, start, -2)
 end
 
 function MaTag:Match()
@@ -314,16 +322,24 @@ function MaTag:Match()
             return
         end
 
+        if #self.mAccumulator == 1 and c == "/" then
+            self.mTagState = eTagState.Close
+        end
+
         if c == '>' then
             self.mIsOpen = false
             if #self.mAccumulator > 1 then
+
                 table.insert(self.mAccumulator, c)
                 self.mTagFull = table.concat(self.mAccumulator)
+
+
                 self.mTag = self:StripTag(self.mTagFull)
-                printf("Tag matched [%s]", self.mTagFull)
+                printf("Tag matched [%s] [%s] [%s]", self.mTagFull, self.mTag, self.mTagState)
 
                 local tagDef = self.mContext:GetTag(self.mTag)
                 if tagDef then
+                    self.mTagType = eTag[tagDef.type]
                 else
                     printf("Unknown tag [%s]", self.mTag)
                     PrintTable(self.mContext.tagTable)
