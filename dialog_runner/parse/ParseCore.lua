@@ -341,6 +341,13 @@ function MaTag:Match()
                 local tagDef = self.mContext:GetTag(self.mTag)
                 if tagDef then
                     self.mTagType = eTag[tagDef.type]
+
+                    if self.mTagType == eTag.Short and self.mTagState == eTagState.Close then
+                        self.mError = string.format("Short tag should never close [%s]", self.mTagFull)
+                        self.mState = eMatch.HaltFailure
+                        return
+                    end
+
                 else
                     printf("Unknown tag [%s]", self.mTag)
                     PrintTable(self.mContext.tagTable)

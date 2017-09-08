@@ -226,13 +226,22 @@ tests =
             return result.isError == true
         end
     },
-    -- {
-    --     name = "Orphan close tag gives error",
-    --     test = function()
-    --         local tree, result = DoParse("bob:</slow>Hello")
-    --         return result.isError == true
-    --     end
-    -- },
+    {
+        name = "Orphan close tag gives error",
+        test = function()
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse("bob:</slow>Hello", tagTable)
+            return result.isError == true
+        end
+    },
+    {
+        name = "Orphan close tag gives error even if short",
+        test = function()
+            local tagTable = { ["slow"] = { type = "Short" }}
+            local tree, result = DoParse("bob:</slow>Hello", tagTable)
+            return result.isError == true
+        end
+    },
     -- {
     --     name = "Unclosed tag gives error, even with nested tags",
     --     test = function()
