@@ -281,7 +281,7 @@ function MaTag:Create(context)
         mState = eMatch.Ongoing,
         mAccumulator = {},
         mIsOpen = false, -- this for the parser to track where it is.
-        mTagType = eTag.One,
+        mTagType = eTag.Short,
         mTagState = eTagState.Open,
     }
 
@@ -292,7 +292,7 @@ end
 function  MaTag:Reset()
     self.mIsOpen = false
     self.mState = eMatch.Ongoing
-    self.mTagType = eTag.One
+    self.mTagType = eTag.Short
     self.mTagState = eTagState.Open
     self.mAccumulator = {}
 end
@@ -555,15 +555,15 @@ function CreateContext(content, tagTable)
 
                         -- Was it an opening or a closing tag?
                         print("WIDE? ", tag.mTag == eTag.Wide)
-                        if tag.mTag == eTag.Wide then
-                            if tag.mTagState == eTagState.Open then
+                        if maTag.mTagType == eTag.Wide then
+                            if maTag.mTagState == eTagState.Open then
                                 push
                                 {
                                     name = maTag.mTag,
                                     -- should store position too
                                 }
                             else
-                                local top = pop()
+                                local top = pop() or {}
                                 if top.name ~= maTag.mTag then
                                     self.isError = true
                                     self.errorLines = string.format("Unexpected closing tag [%s] expected [%s]",  maTag.mTag, top.name)
