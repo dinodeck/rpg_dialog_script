@@ -322,6 +322,7 @@ function MaTag:Match()
             return
         end
 
+        -- Hacky way to determine closing tags
         if #self.mAccumulator == 1 and c == "/" then
             self.mTagState = eTagState.Close
         end
@@ -573,6 +574,12 @@ function CreateContext(content, tagTable)
                 if not v.kill then
                     table.insert(entryList, v.line)
                 end
+            end
+
+            if next(tagStack) then
+
+                self.isError = true
+                self.errorLines = string.format("Unclosed tag [%s]",  next(tagStack))
             end
 
             return entryList

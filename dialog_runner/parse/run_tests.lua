@@ -218,16 +218,14 @@ tests =
         -- 3. Clear both as you find them
         -- 4. Next test is nested tags
     },
-
-
-    -- Bob:Hello<null>\nWorld <- this should work correctly
-    -- {
-    --     name = "Unclosed tag gives error",
-    --     test = function()
-    --         local tree, result = DoParse("bob:<slow>Hello")
-    --         return result.isError == true
-    --     end
-    -- },
+    {
+        name = "Unclosed tag gives error",
+        test = function()
+            local tagTable = { ["slow"] = { type = "short" }}
+            local tree, result = DoParse("bob:<slow>Hello", tagTable)
+            return result.isError == true
+        end
+    },
     -- {
     --     name = "Orphan close tag gives error",
     --     test = function()
