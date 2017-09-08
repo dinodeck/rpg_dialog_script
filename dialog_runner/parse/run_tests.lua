@@ -242,13 +242,22 @@ tests =
             return result.isError == true
         end
     },
-    -- {
-    --     name = "Unclosed tag gives error, even with nested tags",
-    --     test = function()
-    --         local tree, result = DoParse("bob:<slow><slow>Hello</slow>")
-    --         return result.isError == true
-    --     end
-    -- }
+    {
+        name = "Unclosed tag gives error, even with nested tags",
+        test = function()
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse("bob:<slow><slow>Hello</slow>", tagTable)
+            return result.isError == true
+        end
+    },
+    {
+        name = "Nexted wide tags work",
+        test = function()
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable)
+            return result.isError == true
+        end
+    }
     -- All the above tests should return text as a table not a string
     -- Then later there needs to be a bit of clever mungery to get it to look correct
 
