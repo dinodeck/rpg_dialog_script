@@ -251,11 +251,27 @@ tests =
         end
     },
     {
-        name = "Nexted wide tags work",
+        name = "Nested wide tags work",
         test = function()
             local tagTable = { ["slow"] = { type = "Wide" }}
-            local tree, result = DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable)
-            return result.isError == true
+            return AreTablesEqual(
+                DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable),
+                DoParse("bob:Hello", tagTable))
+
+        end
+    },
+    {
+        name = "Short tag nested in Wide tags",
+        test = function()
+            local tagTable =
+            {
+                ["slow"] = { type = "Wide" },
+                ["null"] = { type = "Short" }
+            }
+            return AreTablesEqual(
+                DoParse("bob:<slow><null>Hello</slow>", tagTable),
+                DoParse("bob:Hello", tagTable))
+
         end
     }
     -- All the above tests should return text as a table not a string
