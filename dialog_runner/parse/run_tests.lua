@@ -283,7 +283,7 @@ tests =
         end
     },
     {
-        name = "Multi-line cut script", --date between tags is removed
+        name = "Multi-line cut script",
         test = function()
             local tagTable =
             {
@@ -300,8 +300,63 @@ tests =
                 DoParse("bob:Hello", tagTable))
         end
     },
+    {
+        name = "Multi-line start same line as text cut script",
+        test = function()
+            local tagTable =
+            {
+                ["script"] = { type = "Cut" },
+            }
+
+            -- This fails because the entries are made into strings
+            -- but the tags cover multiple strings
+            -- this matters less for wide tags because they use the stack
+            -- therefore the matcher needs to go multiline
+
+            return AreTablesEqual(
+                DoParse("bob:Hello<script>\nWords go here\n\n</script>", tagTable),
+                DoParse("bob:Hello", tagTable))
+        end
+    },
+    {
+        name = "Multi-line end same line as text cut script",
+        test = function()
+            local tagTable =
+            {
+                ["script"] = { type = "Cut" },
+            }
+
+            -- This fails because the entries are made into strings
+            -- but the tags cover multiple strings
+            -- this matters less for wide tags because they use the stack
+            -- therefore the matcher needs to go multiline
+
+            return AreTablesEqual(
+                DoParse("bob:<script>\nWords go here\n\n</script>Hello", tagTable),
+                DoParse("bob:Hello", tagTable))
+        end
+    },
+
+
+    -- First up:
+    -- Slow text
+    -- Fast text
+    -- Pause
+    -- Color text
+    -- Shaking text
+    -- Couple of transistions 0 - 2s or whatever
+    --    - Fade
+    --    - Fade and fall
+    --    - Rotate
+    --    - Fall and bounce back
+    -- Reintegration
+
 
     -- Cut
+
+    -- Later cut between text boxes, it should be an entry on it's own, without text
+    -- A script that's run between textboxes
+
 
     -- All the above tests should return text as a table not a string
     -- Then later there needs to be a bit of clever mungery to get it to look correct

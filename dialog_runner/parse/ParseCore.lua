@@ -305,6 +305,9 @@ function MaEmptyLine:Match()
     self.mState = eMatch.Failure
 end
 
+-- This is not a standard matcher like the reset
+-- It's used after the text has been broken into lines and is
+-- full of hacks
 MaTag = {}
 MaTag.__index = MaTag
 function MaTag:Create(context)
@@ -318,7 +321,8 @@ function MaTag:Create(context)
         mIsOpen = false, -- this for the parser to track where it is.
         mTagType = eTag.Short,
         mTagState = eTagState.Open,
-        mIsCut = false
+        mIsCut = false,
+        mLine = 1
     }
 
     setmetatable(this, self)
@@ -332,6 +336,7 @@ function  MaTag:Reset()
     self.mTagState = eTagState.Open
     self.mAccumulator = {}
     self.mIsCut = false
+    self.mLine = 1
 end
 
 function MaTag:StripTag(str)
@@ -355,8 +360,6 @@ function MaTag:Match()
 
     if self.mIsCut then
 
-
-
         -- 2. Keep accumulating
         table.insert(self.mAccumulator, c)
 
@@ -379,13 +382,13 @@ function MaTag:Match()
             -- else let it run to the end of the file
         end
 
-        -- 1. At end? -> let the tag parser feed in the next
-        if self.mContext:AtEnd() then
-            print("END! current state: ", self.mState)
-            self.mError = "Found end of file before close tag."
-            self.mState = eMatch.HaltFailure
-            return
-        end
+        -- -- 1. At end? -> let the tag parser feed in the next
+        -- if self.mContext:AtEnd() then
+        --     print("END! current state: ", self.mState)
+        --     self.mError = "Found end of file before close tag."
+        --     self.mState = eMatch.HaltFailure
+        --     return
+        --end
         return
     end
 
@@ -608,20 +611,44 @@ function CreateContext(content, tagTable)
                 refEntryList[k] = {line = v}
             end
 
+            local maTag
 
             for index, entry in ipairs(refEntryList) do
 
                 -- iterate through the line char by char
                 local lineContext = CreateContext(entry.line, self.tagTable)
-                local maTag = MaTag:Create(lineContext)
 
-                while maTag.mState == eMatch.Ongoing do
+                if maTag == nil or maTag.mState ~= eMatch.Ongoing then
+                    maTag = MaTag:Create(lineContext)
+                else
+                    -- Cut tag is reading mulitple lines.
+                    maTag.mContext = lineContext
+                end
+
+                local doReadLine = maTag.mState == eMatch.Ongoing
+                while doReadLine do
                     maTag:Match()
                     lineContext:AdvanceCursor()
 
                     if maTag.mState == eMatch.HaltFailure then
                         self.isError = true
                         self.errorLines = eMatch.mError
+                    elseif maTag.mState == eMatch.Success and maTag.mTagType == eTag.Cut and maTag.mLine > 1 then
+
+                        local m = string.format("^.*</%s>", maTag.mTag)
+                        printf("Come to end of cut tag [%s][%s]", m, refEntryList[index].line)
+                        -- For this line we need to remove everything before the closing tag
+                        refEntryList[index].line = string.gsub(refEntryList[index].line, m, "")
+                        -- Space trimming, this may need to be a little cleverer, we'll see!
+                        -- Trims space ... maybe first line only?
+                        refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
+
+                        if IsEmptyString(refEntryList[index].line) then
+                            refEntryList[index].kill = true
+                        end
+
+                        maTag:Reset()
+
                     elseif maTag.mState == eMatch.Success then
                         print("Success", maTag.mTag)
 
@@ -661,6 +688,34 @@ function CreateContext(content, tagTable)
                         end
 
                         maTag:Reset()
+                    end
+
+
+
+                    if maTag.mTagType == eTag.Cut and
+                        maTag.mState == eMatch.Ongoing and
+                        lineContext:AtEnd() then
+
+                        -- 1. Remove the start of the tag from the line
+                        if maTag.mLine == 1 then
+                            local tag = table.concat(maTag.mAccumulator)
+                            local i, j = string.find(entry.line, tag, 1, true)
+                            refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
+                            refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
+                            if IsEmptyString(refEntryList[index].line) then
+                                refEntryList[index].kill = true
+                            end
+                        else
+                            -- Kill any lines between cut tags
+                            refEntryList[index].kill = true
+                        end
+
+                        print("Yo")
+                        print(tag)
+                        maTag.mLine = maTag.mLine + 1
+                        doReadLine = false
+                    else
+                        doReadLine = maTag.mState == eMatch.Ongoing
                     end
 
                 end
