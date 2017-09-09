@@ -145,7 +145,11 @@ tests =
         test = function()
         local tagTable = { ["null"] = { type = "Short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:\nHello<null>", tagTable), testTable)
+            local parsedTable = DoParse("Bob:\nHello<null>", tagTable)
+
+            -- This test doesn't care about the tag data
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
@@ -222,7 +226,7 @@ tests =
         end
     },
     {
-        name = "Orphan close tag gives error",
+        name = "Orphan wide-close tag gives error",
         test = function()
             local tagTable = { ["slow"] = { type = "Wide" }}
             local tree, result = DoParse("bob:</slow>Hello", tagTable)
@@ -230,7 +234,7 @@ tests =
         end
     },
     {
-        name = "Orphan close tag gives error even if short",
+        name = "Orphan short-close tag gives error",
         test = function()
             local tagTable = { ["slow"] = { type = "Short" }}
             local tree, result = DoParse("bob:</slow>Hello", tagTable)
@@ -334,6 +338,33 @@ tests =
                 DoParse("bob:Hello\n\nGoodbye", tagTable))
         end
     },
+    {
+        name = "Unclosed tag gives error",
+        test = function()
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse("bob:<slow>Hello", tagTable)
+            return result.isError == true
+        end
+    },
+
+-- {
+--     {
+--         ["tags"] = line, offset need two number below
+--         {
+--             [1] = { { id = "tag", op = "push", data=""}},
+--             [5] = { pop = {"tag"}}
+--         }
+--         ["text"] =
+--         {
+--             "Hello",
+--             "Goodbye",
+--         },
+--         ["speaker"] = "bob",
+--     },
+-- },
+
+-- Do the above Jeff:<pause>Hello
+--
 
     -- Cut
 
@@ -342,6 +373,9 @@ tests =
     -- Double space <some script stuff> double space
     -- In this case maybe the tag itself can check for \n\n before it starts
     -- ^ do this add an annotation "After close"
+    -- an annotation or even force the text to change to seomthing like
+    -- bob: hello
+    -- bob: goodbye
 
     -- Start test that tag's recorded positions
     -- and for the wide tags the text they cover

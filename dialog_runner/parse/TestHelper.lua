@@ -22,6 +22,20 @@ function AreTablesEqual(t1, t2)
     end
 end
 
+function StripTable(t, key)
+
+    for k, v in pairs(t) do
+
+        if k == key then
+            t[k] = nil
+        elseif (type(v) == "table") then
+            StripTable(v, key)
+        end
+
+    end
+
+end
+
 printf = function(...) print(string.format(...)) end
 
 function Filter(t, p)
