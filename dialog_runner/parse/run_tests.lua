@@ -290,11 +290,6 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            -- This fails because the entries are made into strings
-            -- but the tags cover multiple strings
-            -- this matters less for wide tags because they use the stack
-            -- therefore the matcher needs to go multiline
-
             return AreTablesEqual(
                 DoParse("bob:\n<script>\n\nWords go here\n\n</script>\nHello", tagTable),
                 DoParse("bob:Hello", tagTable))
@@ -307,11 +302,6 @@ tests =
             {
                 ["script"] = { type = "Cut" },
             }
-
-            -- This fails because the entries are made into strings
-            -- but the tags cover multiple strings
-            -- this matters less for wide tags because they use the stack
-            -- therefore the matcher needs to go multiline
 
             return AreTablesEqual(
                 DoParse("bob:Hello<script>\nWords go here\n\n</script>", tagTable),
@@ -326,16 +316,35 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            -- This fails because the entries are made into strings
-            -- but the tags cover multiple strings
-            -- this matters less for wide tags because they use the stack
-            -- therefore the matcher needs to go multiline
-
             return AreTablesEqual(
                 DoParse("bob:<script>\nWords go here\n\n</script>Hello", tagTable),
                 DoParse("bob:Hello", tagTable))
         end
     },
+    {
+        name = "Multi-line end same line as text cut script",
+        test = function()
+            local tagTable =
+            {
+                ["script"] = { type = "Cut" },
+            }
+
+            return AreTablesEqual(
+                DoParse("bob:Hello\n\n<script>post text box script</script>\n\nGoodbye", tagTable),
+                DoParse("bob:Hello\n\nGoodbye", tagTable))
+        end
+    },
+
+    -- Cut
+
+    -- Later cut between text boxes, it should be an entry on it's own, without text
+    -- A script that's run between textboxes
+    -- Double space <some script stuff> double space
+    -- In this case maybe the tag itself can check for \n\n before it starts
+    -- ^ do this add an annotation "After close"
+
+    -- Start test that tag's recorded positions
+    -- and for the wide tags the text they cover
 
 
     -- First up:
@@ -352,10 +361,7 @@ tests =
     -- Reintegration
 
 
-    -- Cut
 
-    -- Later cut between text boxes, it should be an entry on it's own, without text
-    -- A script that's run between textboxes
 
 
     -- All the above tests should return text as a table not a string
