@@ -165,7 +165,9 @@ tests =
         test = function()
         local tagTable = { ["null"] = { type = "Short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:\nHel<null>lo", tagTable), testTable)
+            local parsedTable = DoParse("Bob:\nHel<null>lo", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
@@ -173,14 +175,18 @@ tests =
         test = function()
         local tagTable = { ["null"] = { type = "Short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:<null>Hello", tagTable), testTable)
+            local parsedTable = DoParse("Bob:<null>Hello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "First speech part as tag is removed including space",
         test = function()
         local tagTable = { ["null"] = { type = "Short" }}
-            return AreTablesEqual(DoParse("Bob: <null>Hello", tagTable),
+        local parsedTable = DoParse("Bob: <null>Hello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable,
                                   DoParse("Bob: Hello", tagTable),
              testTable)
         end
@@ -351,7 +357,10 @@ tests =
 --     {
 --         ["tags"] = line, offset need two number below
 --         {
---             [1] = { { id = "tag", op = "push", data=""}},
+--             [1] =
+--             {
+--                [0] = {{ id = "tag", op = "push", data=""}}
+--             },
 --             [5] = { pop = {"tag"}}
 --         }
 --         ["text"] =
