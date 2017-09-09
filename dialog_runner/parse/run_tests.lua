@@ -196,7 +196,9 @@ tests =
         test = function()
             local tagTable = { ["null"] = { type = "Short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:<null>\nHello", tagTable), testTable)
+            local parsedTable = DoParse("Bob:<null>\nHello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
