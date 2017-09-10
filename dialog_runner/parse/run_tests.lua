@@ -225,7 +225,9 @@ tests =
         name = "Wide tags are remove from final text",
         test = function()
             local tagTable = { ["wide"] = { type = "Wide" }}
-            return AreTablesEqual(DoParse("Bob:<wide>Hello World</wide>", tagTable),
+            local parsedTable = DoParse("Bob:<wide>Hello World</wide>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable,
                                   DoParse("Bob: Hello World", tagTable))
         end
     },
@@ -265,10 +267,9 @@ tests =
         name = "Nested wide tags work",
         test = function()
             local tagTable = { ["slow"] = { type = "Wide" }}
-            return AreTablesEqual(
-                DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable),
-                DoParse("bob:Hello", tagTable))
-
+            local parsedTable = DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
         end
     },
     {
@@ -279,10 +280,9 @@ tests =
                 ["slow"] = { type = "Wide" },
                 ["null"] = { type = "Short" }
             }
-            return AreTablesEqual(
-                DoParse("bob:<slow><null>Hello</slow>", tagTable),
-                DoParse("bob:Hello", tagTable))
-
+            local parsedTable = DoParse("bob:<slow><null>Hello</slow>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
         end
     },
     {
@@ -292,9 +292,9 @@ tests =
             {
                 ["script"] = { type = "Cut" },
             }
-            return AreTablesEqual(
-                DoParse("bob:<script>Words go here</script>Hello", tagTable),
-                DoParse("bob:Hello", tagTable))
+            local parsedTable = DoParse("bob:<script>Words go here</script>Hello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
 
         end
     },
@@ -306,9 +306,9 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            return AreTablesEqual(
-                DoParse("bob:\n<script>\n\nWords go here\n\n</script>\nHello", tagTable),
-                DoParse("bob:Hello", tagTable))
+            local parsedTable = DoParse("bob:\n<script>\n\nWords go here\n\n</script>\nHello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
         end
     },
     {
@@ -319,9 +319,9 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            return AreTablesEqual(
-                DoParse("bob:Hello<script>\nWords go here\n\n</script>", tagTable),
-                DoParse("bob:Hello", tagTable))
+            local parsedTable = DoParse("bob:Hello<script>\nWords go here\n\n</script>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
         end
     },
     {
@@ -332,9 +332,9 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            return AreTablesEqual(
-                DoParse("bob:<script>\nWords go here\n\n</script>Hello", tagTable),
-                DoParse("bob:Hello", tagTable))
+            local parsedTable = DoParse("bob:<script>\nWords go here\n\n</script>Hello", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
         end
     },
     {
@@ -345,9 +345,9 @@ tests =
                 ["script"] = { type = "Cut" },
             }
 
-            return AreTablesEqual(
-                DoParse("bob:Hello\n\n<script>post text box script</script>\n\nGoodbye", tagTable),
-                DoParse("bob:Hello\n\nGoodbye", tagTable))
+            local parsedTable = DoParse("bob:Hello\n\n<script>post text box script</script>\n\nGoodbye", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, DoParse("bob:Hello\n\nGoodbye", tagTable))
         end
     },
     {
@@ -358,6 +358,31 @@ tests =
             return result.isError == true
         end
     },
+    {
+        name = "Tag at start of a line is at offset 0",
+        test = function()
+
+
+            local testText = "bob:<null>Hello"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+            local tagEntry = firstEntry.tags[1][0] or {}
+
+            --Hello Wor
+            --123456789
+
+            -- Tag position
+            --*Hello Wo
+            -- 0 offset
+
+            --Hello Wor*
+            -- 9 offset
+
+            return tagEntry.id == "null"
+        end
+    }
 
 -- {
 --     {
