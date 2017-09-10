@@ -205,7 +205,9 @@ tests =
         name = "All space is trimmed before tag",
         test = function()
             local tagTable = { ["null"] = { type = "Short" }}
-            return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>", tagTable),
+            local parsedTable = DoParse("Bob:\nHello\n\n\n\n<null>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable,
                                   DoParse("Bob:\nHello\n\n\n\n", tagTable))
         end
     },
@@ -213,7 +215,9 @@ tests =
         name = "All space is trimmed before and after tag",
         test = function()
             local tagTable = { ["null"] = { type = "Short" }}
-            return AreTablesEqual(DoParse("Bob:\nHello\n\n\n\n<null>\n\n\n\nWorld", tagTable),
+            local parsedTable = DoParse("Bob:\nHello\n\n\n\n<null>\n\n\n\nWorld", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable,
                                   DoParse("Bob:\nHello\n\n\n\n\n\n\n\nWorld", tagTable))
         end
     },
