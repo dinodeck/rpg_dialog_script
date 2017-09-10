@@ -580,6 +580,8 @@ function CreateContext(content, tagTable)
 
         ProcessTagsInBuffer = function(self, entryList, current)
 
+            current.tags = current.tags or {}
+
             -- entryList is the list of text entries a person is saying.
             --
             -- Bob:
@@ -669,9 +671,26 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                         end
 
-                        -- Was it an opening or a closing tag?
                         print("WIDE? ", tag.mTag == eTag.Wide)
-                        if maTag.mTagType == eTag.Wide then
+                        if maTag.mTagType == eTag.Short then
+
+                            -- Gets the line number
+                            -- Have to be careful with kill and so on here
+                            local line = index
+                            current.tags[line] = current.tags[line] or {}
+
+                            -- Again if we kill or trim this is going to change
+                            local offset = i - 1
+                            current.tags[line][offset] = current.tags[line][offset] or {}
+                            printf("INDEX: %s OFFSET: %s", line, offset)
+                            table.insert(current.tags[line][offset],
+                            {
+                                id = maTag.mTag,
+                                op = "push",
+                                data = ""
+                            })
+
+                        elseif maTag.mTagType == eTag.Wide then     -- Was it an opening or a closing tag?
                             if maTag.mTagState == eTagState.Open then
                                 push
                                 {
@@ -710,8 +729,6 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                         end
 
-                        print("Yo")
-                        print(tag)
                         maTag.mLine = maTag.mLine + 1
                         doReadLine = false
                     else

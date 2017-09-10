@@ -370,6 +370,7 @@ tests =
             local _, firstEntry = next(tree)
             local tagEntry = firstEntry.tags[1][0] or {}
 
+
             --Hello Wor
             --123456789
 
@@ -380,7 +381,23 @@ tests =
             --Hello Wor*
             -- 9 offset
 
-            return tagEntry.id == "null"
+            return tagEntry[1].id == "null"
+        end
+    },
+    {
+        name = "Tag at end of a line is at offset 0",
+        test = function()
+
+
+            local testText = "bob:Hello<null>"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+            local strLength = #("Hello")
+            local tagEntry = firstEntry.tags[1][strLength] or {}
+
+            return tagEntry[1].id == "null"
         end
     }
 
