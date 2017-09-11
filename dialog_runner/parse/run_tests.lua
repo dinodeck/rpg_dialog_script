@@ -399,8 +399,58 @@ tests =
 
             return tagEntry[1].id == "null"
         end
+    },
+    {
+        name = "Front tag offset is correct in regards to line merging",
+        test = function()
+
+
+            local testText = "bob:   <null>Hello"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            local tagEntry = firstEntry.tags[1][0] or {}
+
+            return tagEntry[1].id == "null"
+        end
+    },
+    {
+        name = "Front tag offset is correct in regards to line merging with pre-newline",
+        test = function()
+
+
+            local testText = "bob:   \n<null>Hello"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            local tagEntry = firstEntry.tags[1][0] or {}
+
+            return tagEntry[1].id == "null"
+        end
+    },
+    {
+        name = "Front tag offset is correct in regards to line merging with post-newline",
+        test = function()
+
+
+            local testText = "bob:   <null>\nHello"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            local tagEntry = firstEntry.tags[1][0] or {}
+
+            return tagEntry[1].id == "null"
+        end
     }
 
+-- if it handles these it should be ok?
+-- local testText = "bob:Hello\n<null>"
 -- {
 --     {
 --         ["tags"] = line, offset need two number below
