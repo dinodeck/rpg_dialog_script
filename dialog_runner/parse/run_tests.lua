@@ -294,8 +294,10 @@ tests =
         test = function()
             local tagTable = { ["slow"] = { type = "Wide" }}
             local parsedTable = DoParse("bob:<slow><slow>Hello</slow></slow>", tagTable)
+            local testTable = DoParse("bob:Hello", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
@@ -307,8 +309,10 @@ tests =
                 ["null"] = { type = "Short" }
             }
             local parsedTable = DoParse("bob:<slow><null>Hello</slow>", tagTable)
+            local testTable = DoParse("bob:Hello", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
