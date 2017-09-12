@@ -339,8 +339,10 @@ tests =
             }
 
             local parsedTable = DoParse("bob:\n<script>\n\nWords go here\n\n</script>\nHello", tagTable)
+            local testTable = DoParse("bob:Hello", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
