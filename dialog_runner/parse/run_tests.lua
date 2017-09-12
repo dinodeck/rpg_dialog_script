@@ -318,8 +318,10 @@ tests =
                 ["script"] = { type = "Cut" },
             }
             local parsedTable = DoParse("bob:<script>Words go here</script>Hello", tagTable)
+            local testTable = DoParse("bob:Hello", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable, DoParse("bob:Hello", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
 
         end
     },
