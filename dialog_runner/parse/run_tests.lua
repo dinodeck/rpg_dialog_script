@@ -239,9 +239,10 @@ tests =
         test = function()
             local tagTable = { ["null"] = { type = "Short" }}
             local parsedTable = DoParse("Bob:\nHello\n\n\n\n<null>\n\n\n\nWorld", tagTable)
+            local testTable = DoParse("Bob:\nHello\n\n\n\n\n\n\n\nWorld", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable,
-                                  DoParse("Bob:\nHello\n\n\n\n\n\n\n\nWorld", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
