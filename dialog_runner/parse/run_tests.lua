@@ -140,8 +140,8 @@ tests =
         name = "Space between multiple speakers is ignored",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
-            StripTable(parsedTable, "tags")
             local parsedTable = DoParse("null:Hello\n\n\nbob:Hello")
+            StripTable(parsedTable, "tags")
             return AreTablesEqual(parsedTable, testTable)
         end
     },
