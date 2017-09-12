@@ -131,8 +131,8 @@ tests =
         name = "A script can have multiple speakers",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
-            StripTable(parsedTable, "tags")
             local parsedTable = DoParse("null:Hello\nbob:Hello")
+            StripTable(parsedTable, "tags")
             return AreTablesEqual(parsedTable, testTable)
         end
     },
@@ -189,6 +189,7 @@ tests =
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
             local parsedTable = DoParse("Bob:\nHel<null>lo", tagTable)
             StripTable(parsedTable, "tags")
+            StripTable(testTable, "tags")
             return AreTablesEqual(parsedTable, testTable)
         end
     },
