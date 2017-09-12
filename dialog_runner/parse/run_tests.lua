@@ -251,9 +251,10 @@ tests =
         test = function()
             local tagTable = { ["wide"] = { type = "Wide" }}
             local parsedTable = DoParse("Bob:<wide>Hello World</wide>", tagTable)
+            local testTable = DoParse("Bob: Hello World", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable,
-                                  DoParse("Bob: Hello World", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
