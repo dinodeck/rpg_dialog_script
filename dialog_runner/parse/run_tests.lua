@@ -205,12 +205,12 @@ tests =
     {
         name = "First speech part as tag is removed including space",
         test = function()
-        local tagTable = { ["null"] = { type = "Short" }}
-        local parsedTable = DoParse("Bob: <null>Hello", tagTable)
+            local tagTable = { ["null"] = { type = "Short" }}
+            local parsedTable = DoParse("Bob: <null>Hello", tagTable)
+            local testTable = DoParse("Bob: Hello", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable,
-                                  DoParse("Bob: Hello", tagTable),
-             testTable)
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
