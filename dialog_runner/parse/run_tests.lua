@@ -31,7 +31,9 @@ tests =
          name = "Speaker with name and line creates syntax tree representation.",
          test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("null:Hello"), testTable)
+            local parsedTable = DoParse("null:Hello")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
          end
     },
     {
@@ -59,7 +61,9 @@ tests =
         name = "Speech may contain colon",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello Altar: Destroyer of Worlds."} }}
-            return AreTablesEqual(DoParse("null:Hello Altar: Destroyer of Worlds."), testTable)
+            local parsedTable = DoParse("null:Hello Altar: Destroyer of Worlds.")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end,
     },
     {
@@ -73,56 +77,72 @@ tests =
         name = "Speaker mame may contain space",
         test = function()
             local testTable = {{speaker = "Mr null", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Mr null:Hello"), testTable)
+            local parsedTable = DoParse("Mr null:Hello")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Ignore leading newline in speech",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("null:\nHello"), testTable)
+            local parsedTable = DoParse("null:\nHello")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Ignore leading whitespace in speech",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("null: Hello"), testTable)
+            local parsedTable = DoParse("null: Hello")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Single line breaks are preserved.",
         test = function()
             local testTable = {{speaker = "null", text = {"It was really dark\nthat's why we didn't see him."} }}
-            return AreTablesEqual(DoParse("null:It was really dark\nthat's why we didn't see him."), testTable)
+            local parsedTable = DoParse("null:It was really dark\nthat's why we didn't see him.")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Extra space after speech line break is ignored",
         test = function()
             local testTable = {{speaker = "null", text = {"It was really dark\nthat's why we didn't see him."} }}
-            return AreTablesEqual(DoParse("null:It was really dark \n that's why we didn't see him."), testTable)
+            local parsedTable = DoParse("null:It was really dark \n that's why we didn't see him.")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Trailing newlines are removed",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello", "Goodbye"} }}
-            return AreTablesEqual(DoParse("null:Hello\n\nGoodbye\n\n\n"), testTable)
+            local parsedTable = DoParse("null:Hello\n\nGoodbye\n\n\n")
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "A script can have multiple speakers",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("null:Hello\nbob:Hello"), testTable)
+            StripTable(parsedTable, "tags")
+            local parsedTable = DoParse("null:Hello\nbob:Hello")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
         name = "Space between multiple speakers is ignored",
         test = function()
             local testTable = {{speaker = "null", text = {"Hello"} }, {speaker = "bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("null:Hello\n\n\nbob:Hello"), testTable)
+            StripTable(parsedTable, "tags")
+            local parsedTable = DoParse("null:Hello\n\n\nbob:Hello")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     -- {
@@ -157,7 +177,9 @@ tests =
         test = function()
         local tagTable = { ["null"] = { type = "Short" }}
             local testTable = {{speaker = "Bob", text = {"Hello"} }}
-            return AreTablesEqual(DoParse("Bob:\nHello<null><null>", tagTable), testTable)
+            local parsedTable = DoParse("Bob:\nHello<null><null>", tagTable)
+            StripTable(parsedTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
@@ -206,9 +228,10 @@ tests =
         test = function()
             local tagTable = { ["null"] = { type = "Short" }}
             local parsedTable = DoParse("Bob:\nHello\n\n\n\n<null>", tagTable)
+            local testTable = DoParse("Bob:\nHello\n\n\n\n", tagTable)
             StripTable(parsedTable, "tags")
-            return AreTablesEqual(parsedTable,
-                                  DoParse("Bob:\nHello\n\n\n\n", tagTable))
+            StripTable(testTable, "tags")
+            return AreTablesEqual(parsedTable, testTable)
         end
     },
     {
@@ -447,7 +470,23 @@ tests =
 
             return tagEntry[1].id == "null"
         end
-    }
+    },
+    -- {
+    --     name = "Trailing tag offset is correct in regards to line merging with post-newline",
+    --     test = function()
+
+
+    --         local testText = "bob:Hello\n<null>"
+    --         local tagTable = { ["null"] = { type = "Short" }}
+    --         local tree, result = DoParse(testText, tagTable)
+
+    --         local _, firstEntry = next(tree)
+    --         local strLength = #("Hello")
+    --         local tagEntry = firstEntry.tags[1][strLength] or {}
+
+    --         return tagEntry[1].id == "null"
+    --     end
+    -- }
 
 -- if it handles these it should be ok?
 -- local testText = "bob:Hello\n<null>"
