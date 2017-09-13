@@ -489,7 +489,7 @@ tests =
         end
     },
     {
-        name = "New line should be stripped with trailing tag",
+        name = "New line should be stripped with trailing tag", -- !! REPEAT THIS TEST WITH INLINE CUT
         test = function()
 
 
@@ -500,18 +500,33 @@ tests =
             PrintTable(tree)
             return tree[1].text[1] == "Hello"
         end
+    },
+    {
+        name = "Trailing tag should give correct index", -- !! REPEAT THIS TEST WITH INLINE CUT
+        test = function()
+            local testText = "bob:Hello\n<null>"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+            local strLength = #("Hello")
+            local tagEntry = firstEntry.tags[1][strLength] or {}
+            return tagEntry[1].id == "null"
+        end
+    },
+    {
+        name = "Inner short tags should give correct index", -- !! REPEAT THIS TEST WITH INLINE CUT
+        test = function()
+            local testText = "bob:Hello\n<null>\nWorld"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+            local strLength = #("Hello")
+            local tagEntry = firstEntry.tags[1][strLength] or {}
+            return tagEntry[1].id == "null"
+        end
     }
-
---         local testText = "bob:Hello\n<null>"
---         local tagTable = { ["null"] = { type = "Short" }}
---         local tree, result = DoParse(testText, tagTable)
-
---         local _, firstEntry = next(tree)
---         local strLength = #("Hello")
---         local tagEntry = firstEntry.tags[1][strLength] or {}
---         return tagEntry[1].id == "null"
---     end
--- }
 
 -- if it handles these it should be ok?
 -- local testText = "bob:Hello\n<null>"
