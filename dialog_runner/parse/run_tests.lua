@@ -488,22 +488,30 @@ tests =
             return tagEntry[1].id == "null"
         end
     },
-    -- {
-    --     name = "Trailing tag offset is correct in regards to line merging with post-newline",
-    --     test = function()
+    {
+        name = "New line should be stripped with trailing tag",
+        test = function()
 
 
-    --         local testText = "bob:Hello\n<null>"
-    --         local tagTable = { ["null"] = { type = "Short" }}
-    --         local tree, result = DoParse(testText, tagTable)
+            local testText = "bob:Hello\n <null>"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
 
-    --         local _, firstEntry = next(tree)
-    --         local strLength = #("Hello")
-    --         local tagEntry = firstEntry.tags[1][strLength] or {}
+            PrintTable(tree)
+            return tree[1].text[1] == "Hello"
+        end
+    }
 
-    --         return tagEntry[1].id == "null"
-    --     end
-    -- }
+--         local testText = "bob:Hello\n<null>"
+--         local tagTable = { ["null"] = { type = "Short" }}
+--         local tree, result = DoParse(testText, tagTable)
+
+--         local _, firstEntry = next(tree)
+--         local strLength = #("Hello")
+--         local tagEntry = firstEntry.tags[1][strLength] or {}
+--         return tagEntry[1].id == "null"
+--     end
+-- }
 
 -- if it handles these it should be ok?
 -- local testText = "bob:Hello\n<null>"

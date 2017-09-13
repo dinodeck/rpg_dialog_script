@@ -658,10 +658,13 @@ function CreateContext(content, tagTable)
                         -- This is all a bit hard coded for now
                         -- Worry about storing this data later
                         local startIndex = 1
-                        local tag = maTag.mTagFull
-                        local i, j = string.find(entry.line, tag, startIndex, true)
-                        print("Tag: ", i, j, entry.line:sub(i, j))
+                        local tag = string.format("[ \n]*%s", maTag.mTagFull)
+                        local i, j = string.find(entry.line, tag, startIndex, false)
+                        print("!!Tag: ", i, j, entry.line:sub(i, j))
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
+
+
+                        printf("Before: [%s]", refEntryList[index].line)
 
                         -- Space trimming, this may need to be a little cleverer, we'll see!
                         -- Trims space ... maybe first line only?
@@ -670,6 +673,8 @@ function CreateContext(content, tagTable)
                         if IsEmptyString(refEntryList[index].line) then
                             refEntryList[index].kill = true
                         end
+
+                        printf("After: [%s]", refEntryList[index].line)
 
                         print("WIDE? ", tag.mTag == eTag.Wide)
                         if maTag.mTagType == eTag.Short then
