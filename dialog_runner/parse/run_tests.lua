@@ -497,8 +497,24 @@ tests =
             local tagTable = { ["null"] = { type = "Short" }}
             local tree, result = DoParse(testText, tagTable)
 
-            PrintTable(tree)
+           -- I PrintTable(tree)
             return tree[1].text[1] == "Hello"
+        end
+    },
+    {
+        name = "All newlines before inner short tag are stripped", -- !! REPEAT THIS TEST WITH INLINE CUT
+        test = function()
+
+            -- Hello          Hello
+            -- <null>    -->  World
+            -- World
+
+            local testText = "bob:Hello\n <null>\nWorld"
+            local tagTable = { ["null"] = { type = "Short" }}
+            local tree, result = DoParse(testText, tagTable)
+
+           -- I PrintTable(tree)
+            return tree[1].text[1] == "Hello\nWorld"
         end
     },
     {
@@ -522,32 +538,26 @@ tests =
             local tree, result = DoParse(testText, tagTable)
 
             local _, firstEntry = next(tree)
+            PrintTable(tree)
             local strLength = #("Hello")
             local tagEntry = firstEntry.tags[1][strLength] or {}
             return tagEntry[1].id == "null"
         end
     }
 
--- if it handles these it should be ok?
--- local testText = "bob:Hello\n<null>"
--- {
---     {
---         ["tags"] = line, offset need two number below
---         {
---             [1] =
---             {
---                [0] = {{ id = "tag", op = "push", data=""}}
---             },
---             [5] = { pop = {"tag"}}
---         }
---         ["text"] =
---         {
---             "Hello",
---             "Goodbye",
---         },
---         ["speaker"] = "bob",
---     },
--- },
+    -- Remaining tests?
+    -- No tests that wide tags even work at all
+    --  - If we do wide tags can we cut out the expected marked-up word
+    --          - Over multiple lines?
+    --  - Do the above tests with inline wides
+    --  - Do the above tests with multiple line wides
+    --      - Same line open tag
+    --      - New line open tag
+    --      - Same line close tag (text continues immediately on close)
+    --  - Format, including newlines is important in widetags
+
+    -- The above with cut
+
 
 -- Do the above Jeff:<pause>Hello
 --
@@ -579,25 +589,6 @@ tests =
     --    - Rotate
     --    - Fall and bounce back
     -- Reintegration
-
-
-
-
-
-    -- All the above tests should return text as a table not a string
-    -- Then later there needs to be a bit of clever mungery to get it to look correct
-
-    -- {
-    --     name = "Empty line means new entry",
-    --     local testTable = {{speaker="null", text}}
-    -- }
-    -- {
-    --     name = "missing closing brace - simple error",
-    --     test = function()
-    --         local _, result = DoParse("Hello")
-    --         return result.isError == true
-    --     end
-    -- }
 }
 
 RunTests(tests)
