@@ -36,6 +36,15 @@ function StripTable(t, key)
 
 end
 
+function First(t, f)
+    for k,  v in pairs(t) do
+        if f(v, k) then
+            return v
+        end
+    end
+    return nil
+end
+
 printf = function(...) print(string.format(...)) end
 
 function Filter(t, p)

@@ -377,6 +377,7 @@ function MaTag:Match()
             if match then
                 self.mTagFull = table.concat(self.mAccumulator)
                 self.mState = eMatch.Success
+                self.mTagState = eTagState.Close
                 return
             end
             -- else let it run to the end of the file
@@ -604,7 +605,7 @@ function CreateContext(content, tagTable)
             end
 
             local pop = function(v)
-                table.remove(tagStack)
+                return table.remove(tagStack)
             end
 
 
@@ -652,7 +653,7 @@ function CreateContext(content, tagTable)
                         maTag:Reset()
 
                     elseif maTag.mState == eMatch.Success then
-                        print("Success", maTag.mTag)
+                        printf("Success [%s][%s]", maTag.mTag, maTag.mTagState )
 
                         -- 1. Remove it
                         -- This is all a bit hard coded for now
@@ -705,11 +706,26 @@ function CreateContext(content, tagTable)
                                     offset = offset
                                 }
                             else
+
                                 local top = pop() or {}
                                 if top.name ~= maTag.mTag then
                                     self.isError = true
-                                    self.errorLines = string.format("Unexpected closing tag [%s] expected [%s]",  maTag.mTag, top.name)
+                                    local errorStr = string.format("Unexpected closing tag [%s] expected [%s]",  maTag.mTag, top.name)
+                                    print(errorStr)
+                                    self.errorLines = errorStr
+                                    return
                                 end
+
+                                -- Let's add the close tag
+                                current.tags[line] = current.tags[line] or {}
+                                current.tags[line][offset] = current.tags[line][offset] or {}
+
+                                table.insert(current.tags[line][offset],
+                                {
+                                    id = maTag.mTag,
+                                    op = "close",
+                                    data = "", -- wide tags _don't have data_, that's only for cut
+                                })
                             end
                         end
 

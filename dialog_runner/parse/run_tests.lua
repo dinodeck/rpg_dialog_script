@@ -538,19 +538,45 @@ tests =
             local tree, result = DoParse(testText, tagTable)
 
             local _, firstEntry = next(tree)
-            PrintTable(tree)
+            --PrintTable(tree)
             local strLength = #("Hello")
             local tagEntry = firstEntry.tags[1][strLength] or {}
             return tagEntry[1].id == "null"
         end
     },
     {
-        name = "Wide tag marksup full oneliner",
+        name = "Both wide tags are added to the tag table",
         test = function()
             local testText = "bob:<slow>Hello</slow>"
-            return false
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse(testText, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            -- Might need to make this a more general function
+            -- a, b = GetFirstTagPair("slow") <- return the actual tag
+            local tagsLineOne = firstEntry.tags[1]
+            local openTag = First(tagsLineOne,
+                                  function(v, k)
+                                      local v = v[1]
+                                      return (v.op == "open" and v.id == "slow")
+                                   end)
+            local closeTag = First(tagsLineOne,
+                                   function(v, k)
+                                      local v = v[1]
+                                      return (v.op == "close" and v.id == "slow")
+                                   end)
+            local doTagsExist = (openTag ~= nil) and (closeTag ~= nil)
+            return doTagsExist
         end,
     },
+    -- {
+    --     name = "Wide tag marksup full oneliner",
+    --     test = function()
+    --         local testText = "bob:<slow>Hello</slow>"
+    --         return false
+    --     end,
+    -- },
     -- {
     --     name = "Wide tag marksup full two-liner one page",
     --     test = function()
@@ -584,6 +610,7 @@ tests =
     --      - New line open tag
     --      - Same line close tag (text continues immediately on close)
     --  - Format, including newlines is important in widetags
+    --  - Check nested wide tag positions too <slow><shake>What!?</shake></color>
 
     -- The above with cut
 
