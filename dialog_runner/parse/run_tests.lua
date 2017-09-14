@@ -543,7 +543,36 @@ tests =
             local tagEntry = firstEntry.tags[1][strLength] or {}
             return tagEntry[1].id == "null"
         end
-    }
+    },
+    {
+        name = "Wide tag marksup full oneliner",
+        test = function()
+            local testText = "bob:<slow>Hello</slow>"
+            return false
+        end,
+    },
+    -- {
+    --     name = "Wide tag marksup full two-liner one page",
+    --     test = function()
+    --         local testText = "bob:<slow>Hello\nWorld</slow>"
+    --         return false
+    --     end,
+    -- },
+    -- {
+    --     -- I am not super fussed about supporting this.
+    --     name = "Wide tag marksup full two-liner two pages",
+    --     test = function()
+    --         local testText = "bob:<slow>Hello\n\nWorld</slow>"
+    --         return false
+    --     end,
+    -- },
+
+    -- {
+    --     name = "Wide tag marksup full three-liner",
+    --     test = function()
+    --         return false
+    --     end,
+    -- }
 
     -- Remaining tests?
     -- No tests that wide tags even work at all
@@ -570,8 +599,14 @@ tests =
     -- In this case maybe the tag itself can check for \n\n before it starts
     -- ^ do this add an annotation "After close"
     -- an annotation or even force the text to change to seomthing like
+    --
     -- bob: hello
     -- bob: goodbye
+    --
+    -- or maybe this would work
+    --
+    -- script: <script>big ass script</script>
+
 
     -- Start test that tag's recorded positions
     -- and for the wide tags the text they cover

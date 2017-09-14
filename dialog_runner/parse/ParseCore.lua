@@ -660,11 +660,8 @@ function CreateContext(content, tagTable)
                         local startIndex = 1
                         local tag = string.format("[ \n]*%s", maTag.mTagFull)
                         local i, j = string.find(entry.line, tag, startIndex, false)
-                        print("!!Tag: ", i, j, entry.line:sub(i, j))
+                        print("Tag: ", i, j, entry.line:sub(i, j))
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
-
-
-                        printf("Before: [%s]", refEntryList[index].line)
 
                         -- Space trimming, this may need to be a little cleverer, we'll see!
                         -- Trims space ... maybe first line only?
@@ -674,33 +671,38 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                         end
 
-                        printf("After: [%s]", refEntryList[index].line)
+                        -- Gets the line number
+                        -- Have to be careful with kill and so on here
+                        local line = index
 
+                        -- Again if we kill or trim this is going to change
+                        local offset = i - 1
+
+                        local isWide = maTag.mTagType == eTag.Wide
+                        local isShort = maTag.mTagType == eTag.Short
+                        local isOpen = maTag.mTagState == eTagState.Open
                         print("WIDE? ", tag.mTag == eTag.Wide)
-                        if maTag.mTagType == eTag.Short then
+                        if (isShort or isWide) and isOpen then
 
-                            -- Gets the line number
-                            -- Have to be careful with kill and so on here
-                            local line = index
                             current.tags[line] = current.tags[line] or {}
-
-                            -- Again if we kill or trim this is going to change
-                            local offset = i - 1
                             current.tags[line][offset] = current.tags[line][offset] or {}
-                            printf("INDEX: %s OFFSET: %s", line, offset)
+
                             table.insert(current.tags[line][offset],
                             {
                                 id = maTag.mTag,
-                                op = "push",
+                                op = "open",
                                 data = ""
                             })
 
-                        elseif maTag.mTagType == eTag.Wide then     -- Was it an opening or a closing tag?
-                            if maTag.mTagState == eTagState.Open then
+                        end
+
+                        if isWide then     -- Was it an opening or a closing tag?
+                            if isOpen then
                                 push
                                 {
                                     name = maTag.mTag,
-                                    -- should store position too
+                                    line = line,
+                                    offset = offset
                                 }
                             else
                                 local top = pop() or {}
