@@ -719,7 +719,7 @@ function CreateContext(content, tagTable)
                                 table.insert(current.tags,
                                 {
                                     line = line,
-                                    offset = offset,
+                                    offset = offset - 1,
                                     id = maTag.mTag,
                                     op = "close",
                                     data = nil, -- only cut tags have data
