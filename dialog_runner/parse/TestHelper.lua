@@ -36,6 +36,30 @@ function StripTable(t, key)
 
 end
 
+-- Format linear tags into a look dictionary
+function FormatTags(tagList)
+    local lookup = {}
+
+    for k, v in ipairs(tagList) do
+        local line = v.line
+        local offset = v.offset
+
+        lookup[line] = lookup[line] or {}
+        lookup[line][offset] = lookup[line][offset] or {}
+        table.insert(lookup[line][offset], v)
+
+    end
+
+    return lookup
+end
+
+-- Expects a full parse tree
+function GetFirstTagPair(id, tree)
+    for _, speech_unit in pairs(tree) do
+        local tags = {}
+    end
+end
+
 function First(t, f)
     for k,  v in pairs(t) do
         if f(v, k) then

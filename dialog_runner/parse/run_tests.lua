@@ -408,7 +408,8 @@ tests =
             local tree, result = DoParse(testText, tagTable)
 
             local _, firstEntry = next(tree)
-            local tagEntry = firstEntry.tags[1][0] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][0] or {}
 
 
             --Hello Wor
@@ -435,7 +436,8 @@ tests =
 
             local _, firstEntry = next(tree)
             local strLength = #("Hello")
-            local tagEntry = firstEntry.tags[1][strLength] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][strLength] or {}
 
             return tagEntry[1].id == "null"
         end
@@ -451,7 +453,8 @@ tests =
 
             local _, firstEntry = next(tree)
 
-            local tagEntry = firstEntry.tags[1][0] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][0] or {}
 
             return tagEntry[1].id == "null"
         end
@@ -467,7 +470,8 @@ tests =
 
             local _, firstEntry = next(tree)
 
-            local tagEntry = firstEntry.tags[1][0] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][0] or {}
 
             return tagEntry[1].id == "null"
         end
@@ -483,7 +487,8 @@ tests =
 
             local _, firstEntry = next(tree)
 
-            local tagEntry = firstEntry.tags[1][0] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][0] or {}
 
             return tagEntry[1].id == "null"
         end
@@ -526,7 +531,8 @@ tests =
 
             local _, firstEntry = next(tree)
             local strLength = #("Hello")
-            local tagEntry = firstEntry.tags[1][strLength] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][strLength] or {}
             return tagEntry[1].id == "null"
         end
     },
@@ -540,7 +546,8 @@ tests =
             local _, firstEntry = next(tree)
             --PrintTable(tree)
             local strLength = #("Hello")
-            local tagEntry = firstEntry.tags[1][strLength] or {}
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagEntry = tagLookup[1][strLength] or {}
             return tagEntry[1].id == "null"
         end
     },
@@ -555,7 +562,8 @@ tests =
 
             -- Might need to make this a more general function
             -- a, b = GetFirstTagPair("slow") <- return the actual tag
-            local tagsLineOne = firstEntry.tags[1]
+            local tagLookup = FormatTags(firstEntry.tags)
+            local tagsLineOne = tagLookup[1]
             local openTag = First(tagsLineOne,
                                   function(v, k)
                                       local v = v[1]
