@@ -563,17 +563,18 @@ tests =
             -- Might need to make this a more general function
             -- a, b = GetFirstTagPair("slow") <- return the actual tag
             local tagLookup = FormatTags(firstEntry.tags)
-            local tagsLineOne = tagLookup[1]
-            local openTag = First(tagsLineOne,
-                                  function(v, k)
-                                      local v = v[1]
-                                      return (v.op == "open" and v.id == "slow")
-                                   end)
-            local closeTag = First(tagsLineOne,
-                                   function(v, k)
-                                      local v = v[1]
-                                      return (v.op == "close" and v.id == "slow")
-                                   end)
+            -- local tagsLineOne = tagLookup[1]
+            -- local openTag = First(tagsLineOne,
+            --                       function(v, k)
+            --                           local v = v[1]
+            --                           return (v.op == "open" and v.id == "slow")
+            --                        end)
+            -- local closeTag = First(tagsLineOne,
+            --                        function(v, k)
+            --                           local v = v[1]
+            --                           return (v.op == "close" and v.id == "slow")
+            --                        end)
+            local openTag, closeTag = GetFirstTagPair("slow", tree)
             local doTagsExist = (openTag ~= nil) and (closeTag ~= nil)
             return doTagsExist
         end,

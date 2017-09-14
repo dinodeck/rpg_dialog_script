@@ -685,16 +685,6 @@ function CreateContext(content, tagTable)
                         print("WIDE? ", tag.mTag == eTag.Wide)
                         if (isShort or isWide) and isOpen then
 
-                            -- current.tags[line] = current.tags[line] or {}
-                            -- current.tags[line][offset] = current.tags[line][offset] or {}
-
-                            -- table.insert(current.tags[line][offset],
-                            -- {
-                            --     id = maTag.mTag,
-                            --     op = "open",
-                            --     data = ""
-                            -- })
-
                             table.insert(current.tags,
                             {
                                 line = line,
@@ -734,16 +724,6 @@ function CreateContext(content, tagTable)
                                     op = "close",
                                     data = nil, -- only cut tags have data
                                 })
-
-                                -- current.tags[line] = current.tags[line] or {}
-                                -- current.tags[line][offset] = current.tags[line][offset] or {}
-
-                                -- table.insert(current.tags[line][offset],
-                                -- {
-                                --     id = maTag.mTag,
-                                --     op = "close",
-                                --     data = "", -- wide tags _don't have data_, that's only for cut
-                                -- })
                             end
                         end
 

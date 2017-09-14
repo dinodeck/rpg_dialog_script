@@ -53,10 +53,24 @@ function FormatTags(tagList)
     return lookup
 end
 
--- Expects a full parse tree
+-- Expects a tag lookup table
 function GetFirstTagPair(id, tree)
     for _, speech_unit in pairs(tree) do
-        local tags = {}
+        local matchedOpen = nil
+        local matchedClose = nil
+        for _, v in ipairs(speech_unit.tags) do
+            if v.id == id and v.op == "open" then
+                matchedOpen = v
+            end
+
+            if v.id == id and v.op == "close" then
+                matchedClose = v
+            end
+
+            if matchedOpen and matchedClose then
+                return matchedOpen, matchedClose -- yeh doesn't really match them but whatever
+            end
+        end
     end
 end
 
