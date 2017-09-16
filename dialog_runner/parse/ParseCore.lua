@@ -656,6 +656,7 @@ function CreateContext(content, tagTable)
                     elseif maTag.mState == eMatch.Success then
                         printf("Success [%s][%s]", maTag.mTag, maTag.mTagState )
 
+
                         local isWide = maTag.mTagType == eTag.Wide
                         local isShort = maTag.mTagType == eTag.Short
                         local isOpen = maTag.mTagState == eTagState.Open
@@ -667,7 +668,6 @@ function CreateContext(content, tagTable)
                         local startIndex = 1
                         local tag = string.format("[ \n]*%s", maTag.mTagFull)
                         local i, j = string.find(entry.line, tag, startIndex, false)
-                        printf("Entry.line:[%s]", entry.line)
                         print("Tag: ", i, j, entry.line:sub(i, j))
 
                         -- How many new lines in this tag?
@@ -681,7 +681,10 @@ function CreateContext(content, tagTable)
 
                         -- Gets the line number
                         -- Have to be careful with kill and so on here
-                        local line = index - killCount
+                        local line = index
+                        if isOpen then
+                            line =line - killCount
+                        end
                         -- Again if we kill or trim this is going to change
                         local offset = i - 1
 
@@ -689,31 +692,14 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                             killCount = killCount + 1
 
-                            if line > 1 then
+
+                            if isOpen and line > 1 then
                                 line = line - 1
+                                offset = #refEntryList[line].line
                             end
-
-                            -- If we're going to kill this line, then the tag
-                            -- offset is going to meaningless
-                            -- We need to roll back to the last non-kill line
-                            if isClose then
-                                local searchIndex = index
-                                while(refEntryList[searchIndex].kill) do
-                                    searchIndex = searchIndex - 1
-                                    if searchIndex == 0 then
-                                        searchIndex = 1
-                                        break
-                                    end
-                                end
-
-                                offset = #refEntryList[searchIndex].line
-                            end
-
                         end
 
-                        -- if index == 4 then
-                        --     print("KillCount:", killCount) PrintTable(refEntryList)
-                        -- end
+
 
 
 
@@ -752,6 +738,11 @@ function CreateContext(content, tagTable)
                                 end
 
                                 print("Found close tag", line, offset)
+
+                                if offset == 0 then
+                                    line = line - 1
+                                    offset = (#refEntryList[line].line)
+                                end
 
                                 -- Let's add the close tag
                                 table.insert(current.tags,
@@ -802,6 +793,24 @@ function CreateContext(content, tagTable)
             for k, v in ipairs(refEntryList) do
                 if not v.kill then
                     table.insert(entryList, v.line)
+
+                    for i, j in ipairs(current.tags) do
+                        if j.op == "close" and j.line == k then
+                            j.line = #entryList
+                        end
+                    end
+
+                else
+                    -- Any close tags on this line?
+                    -- Move them up!
+                    for i, j in ipairs(current.tags) do
+
+                        if j.op == "close" and j.line == k then
+                            j.line = #entryList
+                            j.offset = (#entryList[#entryList]) - 1
+                        end
+                        -- end
+                    end
                 end
             end
 

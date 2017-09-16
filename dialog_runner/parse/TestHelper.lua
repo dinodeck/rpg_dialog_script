@@ -71,7 +71,20 @@ function GetTextInFirstWideTag(text, tagList, tag)
             local markedText = firstEntry.text[openTag.line]
             return markedText:sub(s, e)
         else
-            return "Fill me in!"
+            local strBuilder = {}
+            for i = openTag.line, closeTag.line do
+                if i == openTag.line then
+                    local str = firstEntry.text[i]:sub(openTag.offset + 1)
+                    table.insert(strBuilder, str)
+                elseif i == closeTag.line then
+
+                     local str = firstEntry.text[i]:sub(1, closeTag.offset + 1)
+                     table.insert(strBuilder, str)
+                else
+                    table.insert(strBuilder, firstEntry.text[i])
+                end
+            end
+            return table.concat(strBuilder)
         end
 end
 

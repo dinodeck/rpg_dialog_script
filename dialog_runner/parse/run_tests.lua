@@ -719,25 +719,77 @@ tests =
         name = "Nested Wide tag with double line break per tag",
         test = function()
 
-            --
-            -- <slow>
-            --
-            -- <red>
-            --
-            -- Hello World
-            --
-            -- </red>
-            --
-            -- </slow>
-
             local txt = "bob:<slow>\n\n<red>\n\nHello World\n\n</red>\n\n</slow>"
             local tags = {"slow", "red"}
 
             local text1 = GetTextInFirstWideTag(txt, tags, "slow")
             local text2 = GetTextInFirstWideTag(txt, tags, "red")
 
-            return text1 == "Hello World" and
-                  text2 == "Hello World"
+            return text1 == "Hello World" and text2 == "Hello World"
+        end,
+    },
+    {
+        name = "Test tricky nested tags",
+        test = function()
+
+            --
+            -- Bob:Yoyo
+            -- <slow>
+            --
+            -- <red>
+            -- Hello World
+            -- </red>
+            --
+            -- </slow> lolo
+
+            --
+            -- I'm ok with this being the table
+            -- {
+            --    "Yoyo",
+            --    "Hello World"
+            --    "lolo"
+            -- }
+            --
+            --
+
+            local txt = "bob:Yoyo\n<slow>\n\n<red>\n\nHello World\n\n</red>\n\n</slow> lolo"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            printf("<slow>%s</slow><red>%s</red>", text1, text2)
+            return text1 == "Hello World" and text2 == "Hello World"
+        end,
+    },
+    {
+        name = "Test less  tricky nested tags",
+        test = function()
+
+            --
+            -- Bob:Yoyo
+            --
+            -- <slow><red>Hello World</red></slow>
+            --
+            -- lolo
+
+            --
+            -- I'm ok with this being the table
+            -- {
+            --    "Yoyo",
+            --    "Hello World"
+            --    "lolo"
+            -- }
+            --
+            --
+
+            local txt = "bob:Yoyo\n\n<slow><red>Hello World</red></slow>\n\n lolo"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and text2 == "Hello World"
         end,
     },
     -- Remaining tests?
