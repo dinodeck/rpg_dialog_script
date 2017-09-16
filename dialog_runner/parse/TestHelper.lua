@@ -53,6 +53,28 @@ function FormatTags(tagList)
     return lookup
 end
 
+
+function GetTextInFirstWideTag(text, tagList, tag)
+
+        local tagTable = {}
+        for k, v in ipairs(tagList) do
+            tagTable[v] = { type = "Wide" }
+        end
+        local tree, result = DoParse(text, tagTable)
+        local openTag, closeTag = GetFirstTagPair(tag, tree)
+
+        local _, firstEntry = next(tree)
+        local s = openTag.offset + 1
+        local e = closeTag.offset + 1
+
+        if(openTag.line == closeTag.line) then
+            local markedText = firstEntry.text[openTag.line]
+            return markedText:sub(s, e)
+        else
+            return "Fill me in!"
+        end
+end
+
 -- Expects a tag lookup table
 function GetFirstTagPair(id, tree)
     for _, speech_unit in pairs(tree) do

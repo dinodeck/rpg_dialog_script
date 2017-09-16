@@ -602,6 +602,19 @@ tests =
         end,
     },
     {
+        name = "Wide tag marksup full oneliner nested",
+        test = function()
+            local txt = "bob:<slow><red>Hello World</red></slow>"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and
+                  text2 == "Hello World"
+        end,
+    },
+    {
         name = "Wide tag marksup full two-liner one page",
         test = function()
             local testText = "bob:<slow>Hello\nWorld</slow>"
@@ -620,27 +633,64 @@ tests =
             return markedText:sub(s, e) == firstEntryB.text[1]
         end,
     },
-    -- {
-    --     -- I am not super fussed about supporting this.
-    --     name = "Wide tag marksup full two-liner two pages",
-    --     test = function()
-    --         local testText = "bob:<slow>Hello\n\nWorld</slow>"
-    --         return false
-    --     end,
-    -- },
+    {
+        name = "Wide tag marksup full two pages", -- really starting too need some helpers...
+        test = function()
+            local testText = "bob:<slow>Hello\n\nWorld</slow>"
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse(testText, tagTable)
+            local openTag, closeTag = GetFirstTagPair("slow", tree)
 
-    -- {
-    --     name = "Wide tag marksup full three-liner",
-    --     test = function()
-    --         return false
-    --     end,
-    -- }
+            local s = openTag.offset + 1
+            local e = closeTag.offset + 1
 
+            local isOpenTagOnLineOne = openTag.line == 1
+            local isCloseTagOnLineTwo = closeTag.line == 2
+            local isOpenTagOffsetAtStart = s == 1
+            local isCloseOffsetAtEndOfWorld = e == #"World"
+
+            return isCloseTagOnLineTwo and isOpenTagOnLineOne
+                    and isOpenTagOffsetAtStart
+                    and isCloseOffsetAtEndOfWorld
+        end,
+    },
+    {
+        name = "Wide tag respects line folding", -- really starting too need some helpers...
+        test = function()
+            local testText = "bob:<slow>Hello\n\n\nWorld</slow>"
+            local tagTable = { ["slow"] = { type = "Wide" }}
+            local tree, result = DoParse(testText, tagTable)
+            local openTag, closeTag = GetFirstTagPair("slow", tree)
+
+            local s = openTag.offset + 1
+            local e = closeTag.offset + 1
+
+            local isOpenTagOnLineOne = openTag.line == 1
+            local isCloseTagOnLineTwo = closeTag.line == 2
+            local isOpenTagOffsetAtStart = s == 1
+            local isCloseOffsetAtEndOfWorld = e == #"World"
+
+            return isCloseTagOnLineTwo and isOpenTagOnLineOne
+                    and isOpenTagOffsetAtStart
+                    and isCloseOffsetAtEndOfWorld
+        end,
+    },
+    {
+        name = "Wide tag marksup full oneliner nested with line break",
+        test = function()
+
+            local txt = "bob:<slow>\n<red>Hello World</red></slow>"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and
+                  text2 == "Hello World"
+        end,
+    },
     -- Remaining tests?
     -- No tests that wide tags even work at all
-    --  - If we do wide tags can we cut out the expected marked-up word
-    --          - Over multiple lines?
-    --  - Do the above tests with inline wides
     --  - Do the above tests with multiple line wides
     --      - Same line open tag
     --      - New line open tag
