@@ -615,22 +615,27 @@ tests =
         end,
     },
     {
-        name = "Wide tag marksup full two-liner one page",
+        name = "Wide tag marksup full two-liner one p-",
         test = function()
-            local testText = "bob:<slow>Hello\nWorld</slow>"
-            local tagTable = { ["slow"] = { type = "Wide" }}
-            local tree, result = DoParse(testText, tagTable)
-            local treeB, result = DoParse("Hello\nWorld", tagTable)
+            -- local testText = "bob:<slow>Hello\nWorld</slow>"
+            -- local tagTable = { ["slow"] = { type = "Wide" }}
+            -- local tree, result = DoParse(testText, tagTable)
+            -- local treeB, result = DoParse("Hello\nWorld", tagTable)
 
-            local openTag, closeTag = GetFirstTagPair("slow", tree)
-            local _, firstEntry = next(tree)
-            local _, firstEntryB = next(tree)
+            -- local openTag, closeTag = GetFirstTagPair("slow", tree)
+            -- local _, firstEntry = next(tree)
+            -- local _, firstEntryB = next(tree)
 
-            local markedText = firstEntry.text[openTag.line]
-            local s = openTag.offset + 1
-            local e = closeTag.offset + 1
-            -- printf("MARKED: [%s] [%s]", markedText:sub(s, e), firstEntryB.text[1])
-            return markedText:sub(s, e) == firstEntryB.text[1]
+            -- local markedText = firstEntry.text[openTag.line]
+            -- local s = openTag.offset + 1
+            -- local e = closeTag.offset + 1
+            -- -- printf("MARKED: [%s] [%s]", markedText:sub(s, e), firstEntryB.text[1])
+            -- return markedText:sub(s, e) == firstEntryB.text[1]
+
+            local txt = "bob:<slow>Hello\nWorld</slow>"
+            local text1 = GetTextInFirstWideTag(txt, {"slow"}, "slow")
+
+            return text1 == "Hello\nWorld"
         end,
     },
     {
