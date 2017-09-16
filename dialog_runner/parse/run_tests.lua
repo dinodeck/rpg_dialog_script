@@ -566,20 +566,10 @@ tests =
     {
         name = "Wide tag marksup twoword oneliner",
         test = function()
-            local testText = "bob:<slow>Hello</slow> World"
-            local tagTable = { ["slow"] = { type = "Wide" }}
-            local tree, result = DoParse(testText, tagTable)
+            local txt = "bob:<slow>Hello</slow> World"
+            local text1 = GetTextInFirstWideTag(txt, {"slow"}, "slow")
 
-            local openTag, closeTag = GetFirstTagPair("slow", tree)
-            local _, firstEntry = next(tree)
-
-            local markedText = firstEntry.text[openTag.line]
-            local s = openTag.offset + 1
-            local e = closeTag.offset + 1
-
-
-            printf("MARKED: [%s]", markedText:sub(s, e))
-            return markedText:sub(s, e) == "Hello"
+            return text1 == "Hello"
         end,
     },
     {
@@ -669,20 +659,95 @@ tests =
                   text2 == "Hello World"
         end,
     },
+    {
+        name = "Nexted Wide tag with two line breaks",
+        test = function()
+
+            local txt = "bob:<slow>\n<red>Hello World</red>\n</slow>"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and
+                  text2 == "Hello World"
+        end,
+    },
+    {
+        name = "Nexted Wide tag with line break per tag",
+        test = function()
+
+            local txt = "bob:<slow>\n<red>\nHello World\n</red>\n</slow>"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and
+                  text2 == "Hello World"
+        end,
+    },
+    {
+        name = "Nexted Wide tag with line break per tag and continuing text",
+        test = function()
+
+            local txt = "bob:<slow>\n<red>\nHello\n</red>\n</slow> World"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello" and
+                  text2 == "Hello"
+        end,
+    },
+    {
+        name = "Nexted Wide tag with continuing text",
+        test = function()
+
+            local txt = "bob:<slow><red>Hello</red></slow> World"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello" and
+                  text2 == "Hello"
+        end,
+    },
+    {
+        name = "Nested Wide tag with double line break per tag",
+        test = function()
+
+            --
+            -- <slow>
+            --
+            -- <red>
+            --
+            -- Hello World
+            --
+            -- </red>
+            --
+            -- </slow>
+
+            local txt = "bob:<slow>\n\n<red>\n\nHello World\n\n</red>\n\n</slow>"
+            local tags = {"slow", "red"}
+
+            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+
+            return text1 == "Hello World" and
+                  text2 == "Hello World"
+        end,
+    },
     -- Remaining tests?
     -- No tests that wide tags even work at all
     --  - Do the above tests with multiple line wides
     --      - Same line open tag
     --      - New line open tag
-    --      - Same line close tag (text continues immediately on close)
-    --  - Format, including newlines is important in widetags
-    --  - Check nested wide tag positions too <slow><shake>What!?</shake></color>
 
     -- The above with cut
 
-
--- Do the above Jeff:<pause>Hello
---
 
     -- Cut
 

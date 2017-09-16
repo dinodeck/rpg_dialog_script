@@ -615,7 +615,7 @@ function CreateContext(content, tagTable)
             end
 
             local maTag
-
+            local killCount = 0
             for index, entry in ipairs(refEntryList) do
 
                 -- iterate through the line char by char
@@ -629,6 +629,7 @@ function CreateContext(content, tagTable)
                 end
 
                 local doReadLine = maTag.mState == eMatch.Ongoing
+
                 while doReadLine do
                     maTag:Match()
                     lineContext:AdvanceCursor()
@@ -655,33 +656,68 @@ function CreateContext(content, tagTable)
                     elseif maTag.mState == eMatch.Success then
                         printf("Success [%s][%s]", maTag.mTag, maTag.mTagState )
 
+                        local isWide = maTag.mTagType == eTag.Wide
+                        local isShort = maTag.mTagType == eTag.Short
+                        local isOpen = maTag.mTagState == eTagState.Open
+                        local isClose = maTag.mTagState == eTagState.Close
+
                         -- 1. Remove it
                         -- This is all a bit hard coded for now
                         -- Worry about storing this data later
                         local startIndex = 1
                         local tag = string.format("[ \n]*%s", maTag.mTagFull)
                         local i, j = string.find(entry.line, tag, startIndex, false)
+                        printf("Entry.line:[%s]", entry.line)
                         print("Tag: ", i, j, entry.line:sub(i, j))
+
+                        -- How many new lines in this tag?
+
+
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
 
                         -- Space trimming, this may need to be a little cleverer, we'll see!
                         -- Trims space ... maybe first line only?
                         refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
 
-                        if IsEmptyString(refEntryList[index].line) then
-                            refEntryList[index].kill = true
-                        end
-
                         -- Gets the line number
                         -- Have to be careful with kill and so on here
-                        local line = index
-
+                        local line = index - killCount
                         -- Again if we kill or trim this is going to change
                         local offset = i - 1
 
-                        local isWide = maTag.mTagType == eTag.Wide
-                        local isShort = maTag.mTagType == eTag.Short
-                        local isOpen = maTag.mTagState == eTagState.Open
+                        if IsEmptyString(refEntryList[index].line) then
+                            refEntryList[index].kill = true
+                            killCount = killCount + 1
+
+                            if line > 1 then
+                                line = line - 1
+                            end
+
+                            -- If we're going to kill this line, then the tag
+                            -- offset is going to meaningless
+                            -- We need to roll back to the last non-kill line
+                            if isClose then
+                                local searchIndex = index
+                                while(refEntryList[searchIndex].kill) do
+                                    searchIndex = searchIndex - 1
+                                    if searchIndex == 0 then
+                                        searchIndex = 1
+                                        break
+                                    end
+                                end
+
+                                offset = #refEntryList[searchIndex].line
+                            end
+
+                        end
+
+                        -- if index == 4 then
+                        --     print("KillCount:", killCount) PrintTable(refEntryList)
+                        -- end
+
+
+
+
                         print("WIDE? ", tag.mTag == eTag.Wide)
                         if (isShort or isWide) and isOpen then
 
@@ -714,6 +750,8 @@ function CreateContext(content, tagTable)
                                     self.errorLines = errorStr
                                     return
                                 end
+
+                                print("Found close tag", line, offset)
 
                                 -- Let's add the close tag
                                 table.insert(current.tags,
