@@ -647,13 +647,29 @@ function CreateContext(content, tagTable)
                         printf("Come to end of cut tag [%s][%s]", m, refEntryList[index].line)
                         printf("Cut tag [%s]", maTag.mTagFull)
                         -- For this line we need to remove everything before the closing tag
-                        refEntryList[index].line = string.gsub(refEntryList[index].line, m, "")
+                        local lineTxt = string.gsub(refEntryList[index].line, m, "")
                         -- Space trimming, this may need to be a little cleverer, we'll see!
                         -- Trims space ... maybe first line only?
-                        refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
 
-                        if IsEmptyString(refEntryList[index].line) then
-                            refEntryList[index].kill = true
+                        if maTag.doJoin and not IsEmptyString(lineTxt) then
+
+                            local lineIndex = maTag.openLine
+                            if refEntryList[lineIndex].kill then
+                                lineIndex = lineIndex - 1
+                            end
+
+                            lineTxt = string.gsub(lineTxt, "^[\n ]+", "")
+
+                            if not IsEmptyString(lineTxt) then
+                                refEntryList[lineIndex].line = refEntryList[lineIndex].line .. lineTxt
+                            end
+
+                        else
+                            refEntryList[index].line = string.gsub(lineTxt , "^[\n ]+", "")
+
+                            if IsEmptyString(refEntryList[index].line) then
+                                refEntryList[index].kill = true
+                            end
                         end
 
                         table.insert(current.tags,
@@ -826,7 +842,7 @@ function CreateContext(content, tagTable)
                             -- we're moving on to a newline so everything after the tag
                             -- needs stripping for this line
                             -- <%s>.*
-
+                            maTag.doJoin = false
                             local m = string.format("<%s>.*", maTag.mTag)
                             local i, j = refEntryList[index].line:find(m, 1)
                             maTag.offset = i - 1
@@ -836,6 +852,9 @@ function CreateContext(content, tagTable)
                             if IsEmptyString(refEntryList[index].line) then
                                 refEntryList[index].kill = true
                                 -- deciding the offset here is tricker...
+                            else
+                                print("SETTING JOIN TO TRUEEEEEEEE!!")
+                                maTag.doJoin = true
                             end
                         else
                             -- Kill any lines between cut tags

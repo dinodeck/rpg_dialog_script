@@ -36,6 +36,10 @@ function StripTable(t, key)
 
 end
 
+function EscNewline(s)
+    return s:gsub("\n", "\\n")
+end
+
 -- Format linear tags into a look dictionary
 function FormatTags(tagList)
     local lookup = {}

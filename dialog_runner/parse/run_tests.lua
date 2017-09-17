@@ -346,7 +346,7 @@ tests =
         end
     },
     {
-        name = "Multi-line start same line as text cut script",
+        name = "Multiline start same line as text cut script",
         test = function()
             local tagTable =
             {
@@ -357,6 +357,10 @@ tests =
             local testTable = DoParse("bob:Hello", tagTable)
             StripTable(parsedTable, "tags")
             StripTable(testTable, "tags")
+
+            PrintTable(parsedTable)
+            PrintTable(testTable)
+
             return AreTablesEqual(parsedTable, testTable)
         end
     },
@@ -832,6 +836,56 @@ tests =
             local hasOpenTag = firstEntry.tags[1].id == "script" and
                                 firstEntry.tags[1].op == "open"
             return hasOpenTag
+        end,
+    },
+    {
+        -- This fine but actually has a slightly different error
+        name = "Test embedded multi-line cut tag gets written into tag table",
+        test = function()
+            local txt = "bob:Hello\n<script>\nif globals['test'] then\n\nTest();\n\nend\n</script> World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+            -- up until here should be a simple macro
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            PrintTable(firstEntry.tags)
+
+            local hasOpenTag = firstEntry.tags[1].id == "script" and
+                                firstEntry.tags[1].op == "open"
+            return hasOpenTag
+        end,
+    },
+    {
+        -- This fine but actually has a slightly different error
+        name = "Test embedded multi-line cut correctly slices lines",
+        test = function()
+            local txt = "bob:Hello\n<script>\nif globals['test'] then\n\nTest();\n\nend\n</script> World"
+            local txtB = "bob:Hello\n World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+            local treeB, result = DoParse(txtB, tagTable)
+
+            local _, firstEntry = next(tree)
+            local _, firstEntryB = next(treeB)
+
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            PrintTable(firstEntry)
+            PrintTable(firstEntryB)
+
+            printf("A:[%s]\nB:[%s]", EscNewline(firstEntry.text[1]),
+                                 EscNewline(firstEntryB.text[1]))
+            return firstEntry.text[1] == firstEntryB.text[1]
         end,
     },
     --{
