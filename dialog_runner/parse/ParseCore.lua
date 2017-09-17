@@ -329,6 +329,10 @@ function MaTag:Create(context)
     return this
 end
 
+function  MaTag:MovedToNewLine()
+    table.insert(self.mAccumulator, '\n')
+end
+
 function  MaTag:Reset()
     self.mIsOpen = false
     self.mState = eMatch.Ongoing
@@ -641,6 +645,7 @@ function CreateContext(content, tagTable)
 
                         local m = string.format("^.*</%s>", maTag.mTag)
                         printf("Come to end of cut tag [%s][%s]", m, refEntryList[index].line)
+                        printf("Cut tag [%s]", maTag.mTagFull)
                         -- For this line we need to remove everything before the closing tag
                         refEntryList[index].line = string.gsub(refEntryList[index].line, m, "")
                         -- Space trimming, this may need to be a little cleverer, we'll see!
@@ -819,6 +824,7 @@ function CreateContext(content, tagTable)
                         end
 
                         maTag.mLine = maTag.mLine + 1
+                        maTag:MovedToNewLine()
                         doReadLine = false
                     else
                         doReadLine = maTag.mState == eMatch.Ongoing
