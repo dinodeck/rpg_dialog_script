@@ -808,11 +808,9 @@ tests =
 
             PrintTable(firstEntry.tags)
 
-            local hasOpenTag = firstEntry.tags[1].id == script and
+            local hasOpenTag = firstEntry.tags[1].id == "script" and
                                 firstEntry.tags[1].op == "open"
-            local hasCloseTag = firstEntry.tags[2].id == script and
-                                firstEntry.tags[2].op == "close"
-            return hasOpenTag and hasCloseTag
+            return hasOpenTag
         end,
     },
     --{
@@ -832,8 +830,12 @@ tests =
 
     -- The above with cut
 
-
-    -- Cut
+    -- #Cut
+    -- Test this:
+    -- Bob:
+    -- Hello
+    --
+    -- Didn't expect to see you here. <script>blah</script>
 
     -- Later cut between text boxes, it should be an entry on it's own, without text
     -- A script that's run between textboxes

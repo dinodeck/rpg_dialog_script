@@ -659,6 +659,7 @@ function CreateContext(content, tagTable)
 
                         local isWide = maTag.mTagType == eTag.Wide
                         local isShort = maTag.mTagType == eTag.Short
+                        local isCut = maTag.mTagType == eTag.Cut
                         local isOpen = maTag.mTagState == eTagState.Open
                         local isClose = maTag.mTagState == eTagState.Close
 
@@ -667,6 +668,7 @@ function CreateContext(content, tagTable)
                         -- Worry about storing this data later
                         local startIndex = 1
                         local tag = string.format("[ \n]*%s", maTag.mTagFull)
+
 
                         -- 1. b Removing cut tag is special because you want to remove
                         -- the data inbetween and that needs escaping
@@ -690,6 +692,14 @@ function CreateContext(content, tagTable)
                         printf("Tag: i:[%s] j:[%s] lineData:[%s]", i, j, lineData)
 
                         -- EndDebug
+
+                        local data = ""
+                        if maTag.mTagType == eTag.Cut then
+                            -- Need to strip the tags but this ~ok~ for now
+                            local triml = #maTag.mTag + 2 -- <>
+                            local trimr = #maTag.mTag + 3 -- </>
+                            data = refEntryList[index].line:sub(i + triml, j - trimr)
+                        end
 
                         -- How many new lines in this tag?
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
@@ -730,6 +740,21 @@ function CreateContext(content, tagTable)
                                 data = nil
                             })
 
+                        end
+
+                        -- There's a cut tag that's been opened and closed
+                        -- on the first line
+                        if isCut and isClose then
+                            -- Don't care about pushing and popping because
+                            -- cut tags are really just a very long short tag
+                            table.insert(current.tags,
+                            {
+                                line = line,
+                                offset = offset,
+                                id = maTag.mTag,
+                                op = "open", -- no need to put in a close
+                                data = data
+                            })
                         end
 
                         if isWide then     -- Was it an opening or a closing tag?
