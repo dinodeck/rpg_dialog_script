@@ -809,11 +809,18 @@ function CreateContext(content, tagTable)
                         maTag.mState == eMatch.Ongoing and
                         lineContext:AtEnd() then
 
+                        PrintTable(refEntryList)
                         -- 1. Remove the start of the tag from the line
                         if maTag.mLine == 1 then
-                            local tag = table.concat(maTag.mAccumulator)
-                            local i, j = string.find(entry.line, tag, 1, true)
-                            refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
+
+                            -- Change it to <tag>.*
+                            -- we're moving on to a newline so everything after the tag
+                            -- needs stripping for this line
+                            -- <%s>.*
+
+                            local m = string.format("<%s>.*", maTag.mTag)
+
+                            refEntryList[index].line = refEntryList[index].line:gsub(m, "", 1)
                             refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
                             if IsEmptyString(refEntryList[index].line) then
                                 refEntryList[index].kill = true
