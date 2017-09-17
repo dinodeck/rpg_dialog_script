@@ -862,7 +862,6 @@ tests =
         end,
     },
     {
-        -- This fine but actually has a slightly different error
         name = "Test embedded multi-line cut correctly slices lines",
         test = function()
             local txt = "bob:Hello\n<script>\nif globals['test'] then\n\nTest();\n\nend\n</script> World"
@@ -885,15 +884,96 @@ tests =
             return firstEntry.text[1] == firstEntryB.text[1]
         end,
     },
-    --{
-    --      name = "Test inline cut tag at start of line for correct position.",
-    --},
-    -- {
-    --     name = "Test inline cut tag at end of line for correct position."
-    -- },
-    -- {
-    --     name = "Test inline cut tag at inside line for correct position."
-    -- }
+    {
+        name = "Test inline cut tag at start of line for correct position.",
+        test = function()
+            local txt = "bob:<script>Test();</script>Hello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- PrintTable(firstEntry.tags)
+            return "Test();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Test inline cut tag at end of line for correct position.",
+        test = function()
+            local txt = "bob:Hello World<script>Test();</script>"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- PrintTable(firstEntry.tags)
+            return "Test();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Test inline cut tag at end of line for correct position with newline.",
+        test = function()
+            local txt = "bob:Hello World\n<script>Test();</script>"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            return "Test();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Test inline cut tag at inside line for correct position.",
+        test = function()
+            local txt = "bob:Hello <script>Test();</script>World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            return "Test();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Test inline cut gives correct text.",
+        test = function()
+            local txt = "bob:Hello <script>Test();</script>World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+            return "Hello World" == firstEntry.text[1]
+        end,
+    },
+
     -- Remaining tests?
     -- No tests that wide tags even work at all
     --  - Do the above tests with multiple line wides
@@ -933,10 +1013,6 @@ tests =
     -- or maybe this would work
     --
     -- script: <script>big ass script</script>
-
-
-    -- Start test that tag's recorded positions
-    -- and for the wide tags the text they cover
 
 
     -- First up:

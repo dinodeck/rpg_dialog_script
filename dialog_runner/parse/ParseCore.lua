@@ -703,7 +703,7 @@ function CreateContext(content, tagTable)
                         -- 1. b Removing cut tag is special because you want to remove
                         -- the data inbetween and that needs escaping
                         if maTag.mTagType == eTag.Cut then
-                            tag = string.format("[ \n]*<%s>.*</%s>", maTag.mTag,
+                            tag = string.format("<%s>.*</%s>", maTag.mTag,
                                                 maTag.mTag)
                         end
 
@@ -725,10 +725,21 @@ function CreateContext(content, tagTable)
 
                         local data = ""
                         if maTag.mTagType == eTag.Cut then
+                            -- This for what a cut is all on one line
                             -- Need to strip the tags but this ~ok~ for now
+
+                            PrintTable(refEntryList)
+
+                            local source = refEntryList[index].line
+                            local tagsM = string.format("<%s>.*</%s>", maTag.mTag, maTag.mTag)
+                            local i, j = source:find(tagsM)
+
+
+                            printf("Stripping data [%s] [%s]", maTag.mTag, source)
+
                             local triml = #maTag.mTag + 2 -- <>
                             local trimr = #maTag.mTag + 3 -- </>
-                            data = refEntryList[index].line:sub(i + triml, j - trimr)
+                            data = source:sub(i + triml, j - trimr)
                         end
 
                         -- How many new lines in this tag?

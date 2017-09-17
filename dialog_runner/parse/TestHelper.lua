@@ -138,6 +138,11 @@ function StartsWith(str, start)
     return str:find(start) == 1
 end
 
+function TrimLeft(s)
+    return s:gsub("^[\n ]+", "")
+end
+
+
 function RunTests(tests)
 
 
