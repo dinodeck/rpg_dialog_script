@@ -813,6 +813,27 @@ tests =
             return hasOpenTag
         end,
     },
+    {
+        name = "Test multi-line cut tag gets written into tag table",
+        test = function()
+            local txt = "bob:<script>\nif globals['test'] then\n\nTest();\n\nend\n</script>Hello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            PrintTable(firstEntry.tags)
+
+            local hasOpenTag = firstEntry.tags[1].id == "script" and
+                                firstEntry.tags[1].op == "open"
+            return hasOpenTag
+        end,
+    },
     --{
     --      name = "Test inline cut tag at start of line for correct position.",
     --},
@@ -831,6 +852,17 @@ tests =
     -- The above with cut
 
     -- #Cut
+    -- Test this:
+    -- Bob:<script>
+    -- if global['something'] then
+    --     wizards_key();
+    -- end
+    -- </script>Hello World
+    --
+    -- Also the above with the script beginning on a newline
+    -- Also the Hello World beginning on a newline
+    -- And both of the above together
+    --
     -- Test this:
     -- Bob:
     -- Hello
