@@ -810,7 +810,7 @@ tests =
                 return false
             end
 
-            PrintTable(firstEntry.tags)
+            -- PrintTable(firstEntry.tags)
 
             local hasOpenTag = firstEntry.tags[1].id == "script" and
                                 firstEntry.tags[1].op == "open"
@@ -831,7 +831,7 @@ tests =
                 return false
             end
 
-            PrintTable(firstEntry.tags)
+            -- PrintTable(firstEntry.tags)
 
             local hasOpenTag = firstEntry.tags[1].id == "script" and
                                 firstEntry.tags[1].op == "open"
@@ -854,7 +854,7 @@ tests =
                 return false
             end
 
-            PrintTable(firstEntry.tags)
+            -- PrintTable(firstEntry.tags)
 
             local hasOpenTag = firstEntry.tags[1].id == "script" and
                                 firstEntry.tags[1].op == "open"
@@ -880,11 +880,8 @@ tests =
                 return false
             end
 
-            PrintTable(firstEntry)
-            PrintTable(firstEntryB)
-
-            printf("A:[%s]\nB:[%s]", EscNewline(firstEntry.text[1]),
-                                 EscNewline(firstEntryB.text[1]))
+            -- printf("A:[%s]\nB:[%s]", EscNewline(firstEntry.text[1]),
+            --                      EscNewline(firstEntryB.text[1]))
             return firstEntry.text[1] == firstEntryB.text[1]
         end,
     },
