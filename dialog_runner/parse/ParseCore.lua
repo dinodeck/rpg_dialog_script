@@ -656,6 +656,15 @@ function CreateContext(content, tagTable)
                             refEntryList[index].kill = true
                         end
 
+                        table.insert(current.tags,
+                        {
+                            line = maTag.openLine,
+                            offset = maTag.offset,
+                            id = maTag.mTag,
+                            op = "open",
+                            data = maTag.mTagFull
+                        })
+
                         maTag:Reset()
 
                     elseif maTag.mState == eMatch.Success then
@@ -819,11 +828,14 @@ function CreateContext(content, tagTable)
                             -- <%s>.*
 
                             local m = string.format("<%s>.*", maTag.mTag)
-
+                            local i, j = refEntryList[index].line:find(m, 1)
+                            maTag.offset = i - 1
+                            maTag.openLine = index
                             refEntryList[index].line = refEntryList[index].line:gsub(m, "", 1)
                             refEntryList[index].line = string.gsub(refEntryList[index].line , "^[\n ]+", "")
                             if IsEmptyString(refEntryList[index].line) then
                                 refEntryList[index].kill = true
+                                -- deciding the offset here is tricker...
                             end
                         else
                             -- Kill any lines between cut tags
