@@ -667,12 +667,31 @@ function CreateContext(content, tagTable)
                         -- Worry about storing this data later
                         local startIndex = 1
                         local tag = string.format("[ \n]*%s", maTag.mTagFull)
+
+                        -- 1. b Removing cut tag is special because you want to remove
+                        -- the data inbetween and that needs escaping
+                        if maTag.mTagType == eTag.Cut then
+                            tag = string.format("[ \n]*<%s>.*</%s>", maTag.mTag,
+                                                maTag.mTag)
+                        end
+
                         local i, j = string.find(entry.line, tag, startIndex, false)
-                        print("Tag: ", i, j, entry.line:sub(i, j))
+
+                        -- Debug
+                        local lineData = "Error tag stripped failed!"
+                        if i ~= nil and j ~= nil then
+                            lineData = entry.line:sub(i, j)
+                        else
+                            printf("Looking to strip [%s] from [%s]",
+                                  tag,
+                                  entry.line)
+                        end
+
+                        printf("Tag: i:[%s] j:[%s] lineData:[%s]", i, j, lineData)
+
+                        -- EndDebug
 
                         -- How many new lines in this tag?
-
-
                         refEntryList[index].line = refEntryList[index].line:gsub(tag, "", 1)
 
                         -- Space trimming, this may need to be a little cleverer, we'll see!
@@ -698,11 +717,6 @@ function CreateContext(content, tagTable)
                                 offset = #refEntryList[line].line
                             end
                         end
-
-
-
-
-
 
                         print("WIDE? ", tag.mTag == eTag.Wide)
                         if (isShort or isWide) and isOpen then
@@ -996,6 +1010,12 @@ function ProcessMatch(match, context)
 end
 
 function DoParse(data, tagTable)
+
+    if data == nil then
+        print("No data passed into DoParse")
+        return
+    end
+
     local context = CreateContext(data, tagTable)
     local reader = Reader:Create(ReaderActions.START, context)
 

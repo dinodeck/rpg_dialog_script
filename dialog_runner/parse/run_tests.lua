@@ -792,6 +792,38 @@ tests =
             return text1 == "Hello World" and text2 == "Hello World"
         end,
     },
+    {
+        name = "Test cut tag gets written into tag table",
+        test = function()
+            local txt = "bob:<script>Test();</script>Hello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            PrintTable(firstEntry.tags)
+
+            local hasOpenTag = firstEntry.tags[1].id == script and
+                                firstEntry.tags[1].op == "open"
+            local hasCloseTag = firstEntry.tags[2].id == script and
+                                firstEntry.tags[2].op == "close"
+            return hasOpenTag and hasCloseTag
+        end,
+    },
+    --{
+    --      name = "Test inline cut tag at start of line for correct position.",
+    --},
+    -- {
+    --     name = "Test inline cut tag at end of line for correct position."
+    -- },
+    -- {
+    --     name = "Test inline cut tag at inside line for correct position."
+    -- }
     -- Remaining tests?
     -- No tests that wide tags even work at all
     --  - Do the above tests with multiple line wides
