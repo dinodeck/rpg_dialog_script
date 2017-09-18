@@ -702,9 +702,21 @@ function CreateContext(content, tagTable)
 
                         -- 1. b Removing cut tag is special because you want to remove
                         -- the data inbetween and that needs escaping
+
                         if maTag.mTagType == eTag.Cut then
                             tag = string.format("<%s>.*</%s>", maTag.mTag,
                                                 maTag.mTag)
+
+                            -- If the cut tag is on the same line
+                            -- then leave the whitespace alone
+                            -- If it's over a linebreak the trim the preceeding line
+
+                            if string.find(entry.line, "[ ]*\n" .. tag) or
+                             string.find(entry.line, tag .. "\n[ ]*" )then
+                                print("NO SPACE BEFORE TAG----------")
+                                tag = string.format("[ \n]*<%s>.*</%s>", maTag.mTag, maTag.mTag)
+                            end
+
                         end
 
                         local i, j = string.find(entry.line, tag, startIndex, false)

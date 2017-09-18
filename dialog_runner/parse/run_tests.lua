@@ -4,6 +4,10 @@ require("PrintTable")
 require("ParseCore")
 require("TestHelper")
 
+-- Guidelines
+-- Cuts should have no effect at all
+-- Once a cut is removed the text should be as if was parsed without the tags
+
 tests =
 {
     {
@@ -955,6 +959,38 @@ tests =
         end,
     },
     {
+        name = "Test inline cut tag at inside line for correct position with newline.",
+        test = function()
+            local txt = "bob:Hello <script>Test();</script>\nWorld"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            return "Test();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Test inline cut tag at inside line for correct text with newline.",
+        test = function()
+            local txt = "bob:Hello <script>Test();</script>\nWorld"
+            local txtB = "bob:Hello \nWorld"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+            local treeB, result = DoParse(txtB, tagTable)
+
+            local _, firstEntry = next(tree)
+            local _, firstEntryB = next(treeB)
+
+            return firstEntry.text[1] == firstEntryB.text[1]
+        end,
+    },
+    {
         name = "Test inline cut gives correct text.",
         test = function()
             local txt = "bob:Hello <script>Test();</script>World"
@@ -973,26 +1009,111 @@ tests =
             return "Hello World" == firstEntry.text[1]
         end,
     },
+    {
+        name = "Normal in game use.",
+        test = function()
+            local txt = "bob:<script>\nif global['something'] then\n    wizards_key();\nend\n</script>Hello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
 
-    -- Remaining tests?
-    -- No tests that wide tags even work at all
-    --  - Do the above tests with multiple line wides
-    --      - Same line open tag
-    --      - New line open tag
+            local _, firstEntry = next(tree)
 
-    -- The above with cut
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+            return "Hello World" == firstEntry.text[1]
+        end,
+    },
+    {
+        name = "Normal in game use, newline script",
+        test = function()
+            local txt = "bob:\n<script>\nif global['something'] then\n    wizards_key();\nend\n</script>Hello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+            return "Hello World" == firstEntry.text[1]
+        end,
+    },
+    {
+        name = "Normal in game use, newline speech",
+        test = function()
+            local txt = "bob:<script>\nif global['something'] then\n    wizards_key();\nend\n</script>\nHello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+            return "Hello World" == firstEntry.text[1]
+        end,
+    },
+    {
+        name = "Normal in game use, newline speech, newline script",
+        test = function()
+            local txt = "bob:\n<script>\nif global['something'] then\n    wizards_key();\nend\n</script>\nHello World"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            if not next(firstEntry.tags or {}) then
+                print("Empty tag table")
+                return false
+            end
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+            return "Hello World" == firstEntry.text[1]
+        end,
+    },
+    {
+        name = "Also normal ingame use",
+        test = function()
+            local txt = "bob:\nHello\n\nDidn't expect to see you here. <script>DoSomething();</script>"
+            local tagTable = { ["script"] = { type = "Cut" }}
+            local tree, result = DoParse(txt, tagTable)
+
+            local _, firstEntry = next(tree)
+
+            PrintTable(firstEntry)
+
+            -- printf("A:[%s]\nB:[%s]", EscNewline("Hello World"),
+            --                      EscNewline(firstEntryB.text[1]))
+
+            -- The trim on the second line isn't great here but it probably doesn't matter...
+            return "DoSomething();" == firstEntry.tags[1].data
+        end,
+    },
+    {
+        name = "Wide tag problem from game",
+        test = function()
+            local txt = "Major:\nSo, in conclusion...<pause>\n\nHead north to the mine.\n\nFind the <red>skull ruby</red>.\n\n"
+
+            return false
+        end
+    }
+
 
     -- #Cut
-    -- Test this:
-    -- Bob:<script>
-    -- if global['something'] then
-    --     wizards_key();
-    -- end
-    -- </script>Hello World
-    --
-    -- Also the above with the script beginning on a newline
-    -- Also the Hello World beginning on a newline
-    -- And both of the above together
     --
     -- Test this:
     -- Bob:
@@ -1000,7 +1121,14 @@ tests =
     --
     -- Didn't expect to see you here. <script>blah</script>
 
-    -- Later cut between text boxes, it should be an entry on it's own, without text
+    -- Then let's start using in anger
+    -- 1. Color
+    -- 2. Pause
+    -- 3. Slow / Fast
+    -- 4. Visualise cut and short tag positions...? Maybe, if it makes sense
+
+    -- Later:
+    -- cut between text boxes, it should be an entry on it's own, without text
     -- A script that's run between textboxes
     -- Double space <some script stuff> double space
     -- In this case maybe the tag itself can check for \n\n before it starts
