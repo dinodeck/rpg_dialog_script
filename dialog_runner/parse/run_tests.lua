@@ -1107,8 +1107,16 @@ tests =
         name = "Wide tag problem from game",
         test = function()
             local txt = "Major:\nSo, in conclusion...<pause>\n\nHead north to the mine.\n\nFind the <red>skull ruby</red>.\n\n"
+            local tagTable =
+            {
+                ["red"] = { type = "Wide" },
+                ["pause"] = { type = "Short" }
+            }
+            local tree, result = DoParse(txt, tagTable)
+            local _, firstEntry = next(tree)
 
-            return false
+            printf("A:[%s]\nB:[%s]", firstEntry.text[3], "Find the skull ruby.")
+            return firstEntry.text[3] == "Find the skull ruby."
         end
     }
 
