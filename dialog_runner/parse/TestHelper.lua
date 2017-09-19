@@ -33,7 +33,10 @@ function StripTable(t, key)
         end
 
     end
+end
 
+function PrintCompare(a, b)
+    printf("A:[%s]\nB:[%s]", EscNewline(a), EscNewline(b))
 end
 
 function EscNewline(s)

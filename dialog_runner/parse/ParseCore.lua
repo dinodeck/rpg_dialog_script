@@ -7,6 +7,8 @@ end
 -- and rather than go back and rethink instead added on a bunch of hacks
 -- Here be dragons
 --
+-- Needs a rewrite.
+--
 
 printf = function(...) print(string.format(...)) end -- <- need a util class
 
@@ -684,7 +686,7 @@ function CreateContext(content, tagTable)
                         maTag:Reset()
 
                     elseif maTag.mState == eMatch.Success then
-                        printf("Success [%s][%s]", maTag.mTag, maTag.mTagState )
+                        printf("Success [%s][%s][%s]", maTag.mTag, maTag.mTagState, EscNewline(maTag.mTagFull) )
 
 
                         local isWide = maTag.mTagType == eTag.Wide
@@ -697,7 +699,17 @@ function CreateContext(content, tagTable)
                         -- This is all a bit hard coded for now
                         -- Worry about storing this data later
                         local startIndex = 1
-                        local tag = string.format("[ \n]*%s", maTag.mTagFull)
+
+                        local openMatch = "[ \n]*%s"
+
+                        if isWide then
+
+                            -- if there are line breaks it's ok to trim,
+                            -- otherwise not
+                            openMatch = "[\n]*%s[ \n]*"
+                        end
+
+                        local tag = string.format(openMatch, maTag.mTagFull)
 
 
                         -- 1. b Removing cut tag is special because you want to remove

@@ -671,12 +671,17 @@ tests =
         name = "Nexted Wide tag with two line breaks",
         test = function()
 
+            -- bob:<slow>
+            -- <red>Hello World</red>
+            -- </slow>
+
             local txt = "bob:<slow>\n<red>Hello World</red>\n</slow>"
             local tags = {"slow", "red"}
 
             local text1 = GetTextInFirstWideTag(txt, tags, "slow")
             local text2 = GetTextInFirstWideTag(txt, tags, "red")
 
+            PrintCompare(text1, text2)
             return text1 == "Hello World" and
                   text2 == "Hello World"
         end,
@@ -691,24 +696,26 @@ tests =
             local text1 = GetTextInFirstWideTag(txt, tags, "slow")
             local text2 = GetTextInFirstWideTag(txt, tags, "red")
 
+            PrintCompare(text1, "Hellow World")
+            PrintCompare(text2, "Hellow World")
             return text1 == "Hello World" and
                   text2 == "Hello World"
         end,
     },
-    {
-        name = "Nexted Wide tag with line break per tag and continuing text",
-        test = function()
+    -- {
+    --     name = "Nexted Wide tag with line break per tag and continuing text",
+    --     test = function()
 
-            local txt = "bob:<slow>\n<red>\nHello\n</red>\n</slow> World"
-            local tags = {"slow", "red"}
+    --         local txt = "bob:<slow>\n<red>\nHello\n</red>\n</slow> World"
+    --         local tags = {"slow", "red"}
 
-            local text1 = GetTextInFirstWideTag(txt, tags, "slow")
-            local text2 = GetTextInFirstWideTag(txt, tags, "red")
+    --         local text1 = GetTextInFirstWideTag(txt, tags, "slow")
+    --         local text2 = GetTextInFirstWideTag(txt, tags, "red")
 
-            return text1 == "Hello" and
-                  text2 == "Hello"
-        end,
-    },
+    --         return text1 == "Hello" and
+    --               text2 == "Hello"
+    --     end,
+    -- },
     {
         name = "Nexted Wide tag with continuing text",
         test = function()
@@ -1115,7 +1122,7 @@ tests =
             local tree, result = DoParse(txt, tagTable)
             local _, firstEntry = next(tree)
 
-            printf("A:[%s]\nB:[%s]", firstEntry.text[3], "Find the skull ruby.")
+            PrintCompare(firstEntry.text[3], "Find the skull ruby.")
             return firstEntry.text[3] == "Find the skull ruby."
         end
     }
