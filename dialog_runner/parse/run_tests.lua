@@ -1158,6 +1158,11 @@ tests =
     -- script: <script>big ass script</script>
 
 
+    -- often "tag[ ]*\n[ \n]*" is the correct strip, must contain a newline
+    -- really it's the tag alone, or that match
+    -- maybe drop through both, left, right, alone tag and see which matches is best
+    -- or is that mustn't ...
+
     -- First up:
     -- Slow text
     -- Fast text

@@ -6,7 +6,7 @@ Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_6.txt"
+gPath = "example_1.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
@@ -399,7 +399,11 @@ function handleInput()
         local f = io.open(path, "rb")
         local content = f:read("*all")
         f:close()
-        local script, result = DoParse(content)
+        local script, result = DoParse(content,
+        {
+            ['red'] = { type = "Wide" },
+            ['pause'] = { type = "Short" },
+        })
 
         if not result.isError then
             gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
@@ -476,27 +480,6 @@ function update()
     end
 
     gTrackBar:Render(gRenderer)
-
-    -- Measure text does not account for new lines.
-    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 135, gFont:MeasureText("Hello\no"))
-    gFont:DrawText2d(gRenderer, screenW + 5, screenH - 145, gFont:MeasureText("Helloo"))
-
-    -- Trying to find out where the double break is coming from
-    -- do
-    --     gFont:AlignText("left", "top")
-    --     -- gFont:DrawText2d(gRenderer, 50, screenH - 145, "Oh.\nI see now.")
-
-    --     local cache = gFont:CacheText2d(50, screenH - 145, "Oh.\nI see now.")
-    --     gFont:DrawCache(gRenderer, cache, 0.5)
-
-    --     local t = Textbox.CreateFixed(gRenderer, 0, 0, 150, 100,
-    --         {
-    --             font = gFont,
-    --             text = "Oh.\nI see now.",
-    --         })
-    --     t:JumpTo01(0.5)
-    --     t:Render(gRenderer)
-    -- end
 
     gFont:AlignText("left", "top")
     gFont:DrawText2d(gRenderer, screenW + 5, screenH - 5, "Conversation Runner:")

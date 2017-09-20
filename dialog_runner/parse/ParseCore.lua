@@ -686,7 +686,7 @@ function CreateContext(content, tagTable)
                         maTag:Reset()
 
                     elseif maTag.mState == eMatch.Success then
-                        printf("Success [%s][%s][%s]", maTag.mTag, maTag.mTagState, EscNewline(maTag.mTagFull) )
+                        -- printf("Success [%s][%s][%s]", maTag.mTag, maTag.mTagState, EscNewline(maTag.mTagFull) )
 
 
                         local isWide = maTag.mTagType == eTag.Wide

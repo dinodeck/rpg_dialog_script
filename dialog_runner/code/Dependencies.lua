@@ -32,6 +32,10 @@ Apply({
         "TextboxClip.lua",
         "Rect.lua",
         "TypedText.lua",
-        "PlayController.lua"
+        "PlayController.lua",
+        "TextControlStack.lua",
+        "TagColor.lua",
+        "TagPause.lua",
+        "TagDB.lua", -- has to come after tag defs
     },
     function(v) Asset.Run(v) end)
