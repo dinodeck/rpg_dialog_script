@@ -215,13 +215,48 @@ function FixedSequence:Render(renderer)
     clip:Render(renderer)
 end
 
+function RawTagsToLookUp(tags)
+
+    -- Raw tags look like this
+    -- {
+    --     { line = 1, offset = 20, id = "pause", op = "open" },
+    --     { line = 3, offset = 9, id = "red", open = "open"}
+    --     ...
+    -- }
+    -- We're going to convert them to
+    --
+    -- table[line][offset] = { list of tags }
+
+
+    local lookup = {}
+    for k, v in ipairs(tags) do
+
+        local line = v.line
+        lookup[line] = lookup[line] or {}
+
+        local offset = v.offset
+        lookup[line][offset] = lookup[line][offset] or {}
+
+        table.insert(lookup[line][offset], v)
+
+    end
+    return lookup
+end
+
+function TransformScriptTags(script)
+    for k, v in ipairs(script) do
+        v.tags = RawTagsToLookUp(v.tags)
+    end
+end
 
 function CreateConversationSequence(script)
 
     local sequence = FixedSequence:Create()
 
+    print("Sequence start")
     for k, v in ipairs(script) do
         -- 1. Create a textbox
+
 
         local h = 96
         local w = math.floor(h * 2.414213)
@@ -231,6 +266,7 @@ function CreateConversationSequence(script)
             {
                 font = gFont,
                 text = v.text,
+                tags = v.tags
             })
         sequence:AddClip(textbox)
     end
@@ -240,6 +276,10 @@ end
 
 gConversation = nil
 function LoadConversationScript(script)
+
+    -- Tags are per speech unit, so one down from the conversation level.
+    -- CreateConversationSequence maybe a good place to start?
+
 
     local speakerMap = {}
     for k, v in ipairs(script) do
@@ -407,6 +447,7 @@ function handleInput()
 
         if not result.isError then
             gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
+            TransformScriptTags(script)
             PrintTable(script)
             errorLines = nil
             errorLastLine = -1

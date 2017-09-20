@@ -1,9 +1,9 @@
 Major:
-So, in conclusion...
+So, in conclusion...<pause>
 
 Head north to the mine.
 
-Find the skull ruby.
+Find the <red>skull ruby</red>.
 
 Bring it back here to me.
 
