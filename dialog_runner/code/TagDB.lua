@@ -1,8 +1,9 @@
 --
 -- Store the tags that are used in the markup
 --
+local redTag = TagColor:Create(RGB(255,99,71))
 TagDB =
 {
-    ['red'] = TagColor:Create(RGB(255,99,71)),
-    ['pause'] = TagPause:Create(1)
+    ['red'] = function() return redTag end,
+    ['pause'] = function() return TagPause:Create(1) end,
 }

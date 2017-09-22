@@ -40,7 +40,11 @@ function Textbox:Create(params)
         mState = eTextboxState.Intro,
         -- mWriteTween = nil,
         mIntroDuration = 0.3,
-        mOutroDuration = 0.2
+        mOutroDuration = 0.2,
+
+        -- Special effects through tags
+        -- Putting here as tags might operate on the textbox level.
+        mTagLookUp = params.tags or {}
     }
 
     this.mAppearTween = Tween:Create(0, 1, this.mIntroDuration, Tween.Linear),
@@ -52,8 +56,9 @@ function Textbox:Create(params)
         font = params.font,
         bounds = this.mTextArea,
         text = params.text,
+        tags = this.mTagLookUp,
         writeCharDuration = params.writeCharDuration or 0.025, -- this will change per page later <wait>
-        OnWaitToAdvance = function() this:mOnWaitToAdvance() end
+        OnWaitToAdvance = function() this:mOnWaitToAdvance() end,
     }
 
     print("DEBUG-Start", self.mTime or 0)
@@ -61,6 +66,7 @@ function Textbox:Create(params)
     setmetatable(this, self)
     return this
 end
+
 
 -- 1. Make this the default create
 -- 2. Add a shrink to fit option
@@ -79,6 +85,7 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
     --
     -- Section text into box size chunks.
     -- This can and should be a static function.
+    -- ! How this effects that tag look up I'm not sure
     --
     local pages = {}
     if type(text) == "table" then
@@ -110,6 +117,7 @@ function Textbox.CreateFixed(renderer, x, y, width, height, params)
         OnFinish = params.OnFinish,
         OnWaitToAdvance = params.OnWaitToAdvance,
         stack = self,
+        tags = params.tags
     }
 
     return textbox
@@ -118,6 +126,7 @@ end
 function Textbox:Duration()
     return self.mIntroDuration + self.mTypedText:Duration() + self.mOutroDuration
 end
+
 
 function Textbox:JumpTo01(value)
 

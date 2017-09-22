@@ -26,6 +26,7 @@ function TextboxClip:Create(params)
 end
 
 function TextboxClip.CreateFixed(renderer, x, y, width, height, params)
+
     return TextboxClip:Create
     {
         isFixed = true,

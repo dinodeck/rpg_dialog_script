@@ -227,11 +227,26 @@ function RawTagsToLookUp(tags)
     --
     -- table[line][offset] = { list of tags }
 
+    local function CreateTagInstance(id)
+        local tagType = TagDB[id]
+        if tagType == null then
+            printf("Error: Failed to find tag type [%s]", tagType)
+            return
+        end
+        return tagType() -- creates an instance
+    end
+
 
     local lookup = {}
     for k, v in ipairs(tags) do
 
         local line = v.line
+
+        if v.op == "open" then
+            print("CREATING INSTANCE", v.id)
+            v.instance = CreateTagInstance(v.id)
+        end
+
         lookup[line] = lookup[line] or {}
 
         local offset = v.offset

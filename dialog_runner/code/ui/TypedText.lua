@@ -29,10 +29,19 @@ function TypedText:Create(params)
         mBounds = params.bounds or Rect:Create(),
         mPageList = params.text,
         mPageIndex = 1,
+        mTags = params.tags or {},
         mOnWaitToAdvance = params.OnWaitToAdvance or function() print("empty wait to advance") end,
+        mOnBeforeIndexAdvance = params.OnBeforeIndexAdvance or function() end,
         mWriteCharDuration = params.writeCharDuration or 0.025,
         mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
     }
+
+    --
+    -- ## Note
+    --
+    -- Due to pagify the `mPageIndex` does not necessarily correlate with
+    -- mTags. This is just ignored for now.
+    --
 
     setmetatable(this, self)
     local firstPage = this.mPageList[this.mPageIndex]
@@ -65,6 +74,16 @@ function TypedText:Update(dt)
     end
 end
 
+function TypedText:GetTagsForPage(index)
+    --
+    -- ## Note
+    --
+    -- Due to pagify the `mPageIndex` does not necessarily correlate with
+    -- mTags. This is just ignored for now.
+    --
+    return self.mTags[index] or {}
+end
+
 function TypedText:Render(renderer)
 
     self.mFont:AlignText("left", "top")
@@ -76,13 +95,30 @@ function TypedText:Render(renderer)
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
 
+    -- This is a too local a scope, just to get colors working
+    local controlStack = TextControlStack:Create()
+
+    -- Mapping 0 - 1 to character index, needs taking inside this class
     gFont:DrawCache(gRenderer, cache, self.mWriteTween:Value(),
                     function(index, tranIndex, tran01, data)
+
                         local charData = DeepClone(data)
 
+                        -- Tag stuff
+                        local tags = self:GetTagsForPage(self.mPageIndex)
+
+                        if tags[index] ~= nil then
+                            print("FOUND TAG!!", tags[index][1].id)
+                        end
+
+                        charData.color = controlStack:AdjustColor(charData.color)
                         if index > tranIndex then
                             -- Color isn't cloned correctly, needs to be a table
-                            charData.color = Vector.Create(1,1,1,0)
+
+                            charData.color = Vector.Create(charData.color.x,
+                                                           charData.color.y,
+                                                           charData.color.z,
+                                                           0)
                         end
 
                         return charData
@@ -205,7 +241,7 @@ end
 
 function TypedText.Pagify(bounds, text, font)
 
-    print("PAGIFY:", text)
+    -- print("PAGIFY:", text)
 
     local boundsWidth = bounds:Width()
     local boundsHeight = bounds:Height()
@@ -237,6 +273,6 @@ function TypedText.Pagify(bounds, text, font)
         pageList[k] = table.concat(v)
     end
 
-    PrintTable(pageList)
+    -- PrintTable(pageList)
     return pageList
 end

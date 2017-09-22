@@ -32,3 +32,13 @@ end
 function TextControlStack:Peek()
     return self.mStack[#self.mStack]
 end
+
+function TextControlStack:AdjustColor(c)
+
+    -- Go through the stack from top to bottom and ask for color adjustments
+    for k, v in ipairs(self.mStack) do
+        c = v:AdjustColor(c)
+    end
+
+    return c
+end
