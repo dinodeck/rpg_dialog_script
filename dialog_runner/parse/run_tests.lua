@@ -1125,6 +1125,163 @@ tests =
             PrintCompare(firstEntry.text[3], "Find the skull ruby.")
             return firstEntry.text[3] == "Find the skull ruby."
         end
+    },
+    {
+        name = "Wide tags correctly placed in tagdb from game",
+        test = function()
+            local txt = "Major:\nFind the <red>skull ruby</red>.\n"
+            local tagTable = { ["red"] = { type = "Wide" } }
+            local tree, result = DoParse(txt, tagTable)
+            local _, firstEntry = next(tree)
+
+
+    -- This from the game
+    -- F   1   nil
+    -- i   2   nil
+    -- n   3   nil
+    -- d   4   nil
+    --     5   nil
+    -- t   6   nil
+    -- h   7   nil
+    -- e   8   nil
+    --     9   nil
+    -- s   10  color
+    -- k   11  color
+    -- u   12  color
+    -- l   13  color
+    -- l   14  color
+    --     15  color
+    -- r   16  color
+    -- u   17  color
+    -- b   18  color
+    -- y   19  nil
+    -- .   20  nil
+
+    -- This is from the test
+    -- 1   F
+    -- 2   i
+    -- 3   n
+    -- 4   d
+    -- 5
+    -- 6   t
+    -- 7   h
+    -- 8   e
+    -- 9
+    -- 10  s   *
+    -- 11  k
+    -- 12  u
+    -- 13  l
+    -- 14  l
+    -- 15
+    -- 16  r
+    -- 17  u
+    -- 18  b
+    -- 19  y   *
+    -- 20  .
+
+
+            -- Debug print this line)
+            for i = 1, #firstEntry.text[1] do
+
+                local tagMark = ""
+                for k, v in ipairs(firstEntry.tags) do
+                    if (v.offset+1) == i then
+                        tagMark = "*"
+                    end
+                end
+
+                print(i, firstEntry.text[1]:sub(i,i), tagMark)
+            end
+
+            return false
+        end
+    },
+    {
+        name = "Incorrect game tag placement",
+        test = function()
+        local txt = "Speaker:\nHello, <pause>\nHere's the <red>Dungeon Key</red>."
+        local tagTable =
+        {
+            ["red"] = { type = "Wide" },
+            ["pause"] = { type = "Short"}
+        }
+        local tree, result = DoParse(txt, tagTable)
+        local _, firstEntry = next(tree)
+
+
+    -- This from the game
+    -- F   1   nil
+    -- i   2   nil
+    -- n   3   nil
+    -- d   4   nil
+    --     5   nil
+    -- t   6   nil
+    -- h   7   nil
+    -- e   8   nil
+    --     9   nil
+    -- s   10  color
+    -- k   11  color
+    -- u   12  color
+    -- l   13  color
+    -- l   14  color
+    --     15  color
+    -- r   16  color
+    -- u   17  color
+    -- b   18  color
+    -- y   19  nil
+    -- .   20  nil
+
+    -- This is from the test
+    -- 1   F
+    -- 2   i
+    -- 3   n
+    -- 4   d
+    -- 5
+    -- 6   t
+    -- 7   h
+    -- 8   e
+    -- 9
+    -- 10  s   *
+    -- 11  k
+    -- 12  u
+    -- 13  l
+    -- 14  l
+    -- 15
+    -- 16  r
+    -- 17  u
+    -- 18  b
+    -- 19  y   *
+    -- 20  .
+
+            -- Pretty horribly test that just matches the first and last
+            -- characters the tag lands on.
+            local matchCount = 1
+            local foundD = false
+            local foundY = false
+
+            -- Debug print this line)
+            for i = 1, #firstEntry.text[1] do
+
+                local tagMark = ""
+                for k, v in ipairs(firstEntry.tags) do
+                    if (v.offset+1) == i then
+                        tagMark = "*"
+
+                        if matchCount == 2 then
+                            foundD = (firstEntry.text[1]:sub(i,i) == 'D')
+                        elseif matchCount == 3 then
+                            foundY = (firstEntry.text[1]:sub(i,i) == 'y')
+                        end
+
+                        matchCount = matchCount + 1
+                    end
+                end
+
+                print(i, firstEntry.text[1]:sub(i,i), tagMark)
+            end
+
+            return foundD and foundY
+        end
     }
 
 

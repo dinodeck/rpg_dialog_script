@@ -128,6 +128,8 @@ function BitmapText:DrawCache(renderer, cache, trans01, Transition)
 
 end
 
+
+
 -- This is a duplicate of the above there must be a better way
 function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)
     start = start or 1
@@ -136,6 +138,7 @@ function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)
 
     self.mSprite:SetColor(color)
     local prevC = -1
+
     for i = start, finish do
         local c = string.sub(text, i, i)
         if prevC ~= -1 then
@@ -147,7 +150,8 @@ function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)
         {
             uvs = { self:GlyphUV(c) },
             position = { x + self:GlyphOffset(c), y },
-            color = color
+            color = color,
+            debugC = c,
         })
 
         prevC = c
@@ -235,6 +239,7 @@ function BitmapText:DrawText2d(renderer, x, y, text, color, maxWidth, cache)
         if lineEnd == textLen then
             break
         end
+        lineEnd = lineEnd + 1
     end
 
 end
@@ -357,6 +362,7 @@ function BitmapText:NextLine(text, cursor, maxWidth)
             finishW = self:GlyphWidth(prevC)
             if c == '\n' then
                 safeCursor = math.max(cursor, i - 1)
+
             end
             return cursor, safeCursor + 1, safePixelWidth + finishW
         end

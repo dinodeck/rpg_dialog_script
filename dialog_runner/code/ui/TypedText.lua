@@ -84,6 +84,11 @@ function TypedText:GetTagsForPage(index)
     return self.mTags[index] or {}
 end
 
+gDoPrint = true
+gPrintDone = false
+
+gDebugWritten = false
+
 function TypedText:Render(renderer)
 
     self.mFont:AlignText("left", "top")
@@ -94,6 +99,99 @@ function TypedText:Render(renderer)
         self.mPageList[self.mPageIndex],
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
+
+    -- Cache size[31] textSize[30] !!
+    -- I though there wer two newlines ... maybe I fixed this in the wrong place...
+    -- The newline is getting written twice.
+    if gDebugWritten == false then
+        printf("Cache size[%s] textSize[%s]", #cache, #self.mPageList[self.mPageIndex])
+        --PrintTable(cache)
+
+        if next(cache) then
+            local gather = {}
+
+            for k, v in ipairs(cache) do
+                local f = v.debugC:gsub("\n", "\\n")
+                table.insert(gather, f)
+            end
+
+            print(table.concat(gather))
+            print(self.mPageList[self.mPageIndex]:gsub("\n", "\\n"))
+            --PrintTable(cache)
+        end
+
+
+        -- In the cache the first \n is on the line with Hello
+        -- the second \n is with the second line
+
+        -- ["debugC"] = "H",
+        -- ["position"] =
+        -- {
+        --     -100,
+        --     13,
+        -- },
+        -- ["uvs"] =
+        -- {
+        --     0.2578125,
+        --     0.33333333333333,
+        --     0.3046875,
+        --     0.66666666666667,
+        -- },
+
+
+--     {
+--         ["debugC"] = ",",
+--         ["position"] =
+--         {
+--             -75,
+--             13,
+--         },
+--         ["uvs"] =
+--         {
+--             0.84375,
+--             0,
+--             0.8671875,
+--             0.33333333333333,
+--         },
+--         ["color"] = Vector.Create(1, 1, 1, 1),
+--     },
+--     {
+--         ["debugC"] = "\
+-- ",
+--         ["position"] =
+--         {
+--             -72,
+--             13,
+--         },
+--         ["uvs"] =
+--         {
+--             0.65625,
+--             0,
+--             0.6796875,
+--             0.33333333333333,
+--         },
+--         ["color"] = Vector.Create(1, 1, 1, 1),
+--     },
+--     {
+--         ["debugC"] = "\
+-- ",
+--         ["position"] =
+--         {
+--             -103,
+--             1,
+--         },
+--         ["uvs"] =
+--         {
+--             0.65625,
+--             0,
+--             0.6796875,
+--             0.33333333333333,
+--         },
+--         ["color"] = Vector.Create(1, 1, 1, 1),
+--     },
+
+        gDebugWritten = true
+    end
 
     -- This is a too local a scope, just to get colors working
     local controlStack = TextControlStack:Create()
@@ -107,11 +205,38 @@ function TypedText:Render(renderer)
                         -- Tag stuff
                         local tags = self:GetTagsForPage(self.mPageIndex)
 
-                        if tags[index] ~= nil then
-                            print("FOUND TAG!!", tags[index][1].id)
+                        -- controlStack: Process tags for page
+                        local doClose = 0
+                        local ti = index - 1
+                        if tags[ti] ~= nil then
+                            for _, v in ipairs(tags[ti]) do
+                                if v.op == "open"  then
+                                   controlStack:Push(v.instance)
+                                   if v.id == "pause" then
+                                        controlStack:Pop()
+                                   end
+                                elseif v.op == "close" then
+                                    doClose = doClose + 1
+                                end
+                            end
                         end
 
-                        charData.color = controlStack:AdjustColor(charData.color)
+                        if self.mWriteTween:Value() > 0.96 and gDoPrint then
+                            local strBeingPrinted = self.mPageList[self.mPageIndex]
+
+                            local top = controlStack:Peek() or {}
+
+                            print(strBeingPrinted:sub(index,index), index, tostring(top.id))
+                            gPrintDone = true
+                        end
+
+                        -- if (controlStack:Peek()or{}).id == "color" then
+                        --     print("red: ", self.mPageList[self.mPageIndex][index])
+                        -- end
+                        charData.color = Vector.Create(1,1,1,1) -- <- consider fixing deep clone to handle vecs instead
+                        charData.color = Vector.Create(controlStack:AdjustCharacter(charData).color)
+
+
                         if index > tranIndex then
                             -- Color isn't cloned correctly, needs to be a table
 
@@ -121,8 +246,21 @@ function TypedText:Render(renderer)
                                                            0)
                         end
 
+                        for i = 1, doClose do
+                            controlStack:Pop()
+                        end
+
+                        -- oh this is mismatch between page and cache?
+                        if self.mPageList[self.mPageIndex]:sub(index,index) == 'y' then
+                            gYBeingRendered = true
+                        end
                         return charData
                     end)
+
+    if gPrintDone then
+        gDoPrint = false
+    end
+
 end
 
 function TypedText:CalcDuration()

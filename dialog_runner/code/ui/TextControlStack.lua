@@ -26,18 +26,20 @@ function TextControlStack:Push(v)
 end
 
 function TextControlStack:Pop()
-    return table.remove(self.mStack)
+    local top = table.remove(self.mStack)
+    return top
 end
 
 function TextControlStack:Peek()
     return self.mStack[#self.mStack]
 end
 
-function TextControlStack:AdjustColor(c)
+
+function TextControlStack:AdjustCharacter(c)
 
     -- Go through the stack from top to bottom and ask for color adjustments
     for k, v in ipairs(self.mStack) do
-        c = v:AdjustColor(c)
+        c.color = v:AdjustColor(c.color)
     end
 
     return c

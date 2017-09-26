@@ -15,6 +15,6 @@ end
 
 function TagColor:AdjustColor(c)
     -- Don't write into the alpha
-    c:SetXyzw(color.x, color.y, color.z, c.w)
+    c:SetXyzw(self.mColor:X(), self.mColor:Y(), self.mColor:Z(), c:W())
     return c
 end

@@ -6,7 +6,7 @@ Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_1.txt"
+gPath = "example_8.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
@@ -454,11 +454,7 @@ function handleInput()
         local f = io.open(path, "rb")
         local content = f:read("*all")
         f:close()
-        local script, result = DoParse(content,
-        {
-            ['red'] = { type = "Wide" },
-            ['pause'] = { type = "Short" },
-        })
+        local script, result = DoParse(content, TagDB:TagsForParser())
 
         if not result.isError then
             gIndicator:SetColor(Vector.Create(0.05,0.95,0.05,1))
@@ -550,6 +546,9 @@ function update()
     playButton:Render(gRenderer)
 
     handleInput()
+
+    gRenderer:DrawText2d(0,0, "Testing, testing, testing, testing, testing",
+                         Vector.Create(1,1,1,1), 200)
 
     if errorLastLine > -1 then
         local x = -256
