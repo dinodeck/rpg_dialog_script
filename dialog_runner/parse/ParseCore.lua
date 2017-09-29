@@ -3,11 +3,12 @@ require("HigherOrder")
 end
 
 --
--- The original architecture for this didn't really pan out for tags
--- and rather than go back and rethink instead added on a bunch of hacks
--- Here be dragons
+-- # Needs a rewrite.
 --
--- Needs a rewrite.
+-- The original architecture for this didn't really pan out for tags
+-- and rather than go back and rethink instead I added on a bunch of hacks
+--
+-- "Here be dragons"
 --
 
 printf = function(...) print(string.format(...)) end -- <- need a util class

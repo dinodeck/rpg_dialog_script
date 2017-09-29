@@ -119,13 +119,16 @@ function BitmapText:DrawCache(renderer, cache, trans01, Transition)
     for k, v in ipairs(cache) do
 
         local charData = Transition(k, index, char01, v)
-
-        self.mSprite:SetUVs(unpack(charData.uvs))
-        self.mSprite:SetPosition(unpack(charData.position))
-        self.mSprite:SetColor(charData.color)
-        renderer:DrawSprite(self.mSprite)
+        self:DrawCacheChar(renderer, charData)
     end
 
+end
+
+function BitmapText:DrawCacheChar(renderer, charData)
+    self.mSprite:SetUVs(unpack(charData.uvs))
+    self.mSprite:SetPosition(unpack(charData.position))
+    self.mSprite:SetColor(charData.color)
+    renderer:DrawSprite(self.mSprite)
 end
 
 
@@ -151,7 +154,7 @@ function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)
             uvs = { self:GlyphUV(c) },
             position = { x + self:GlyphOffset(c), y },
             color = color,
-            debugC = c,
+            --debugC = c,
         })
 
         prevC = c

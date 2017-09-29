@@ -2,7 +2,7 @@
 -- Store the tags that are used in the markup
 --
 local redTag = TagColor:Create(RGB(255,99,71))
-local goldTag = TagColor:Create(RGB(238, 232, 170))
+local goldTag = TagColor:Create(Vector.Create(0.972, 0.794, 0.102))
 TagDB =
 {
     ['red'] = function() return redTag end,

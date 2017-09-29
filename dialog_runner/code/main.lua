@@ -547,9 +547,6 @@ function update()
 
     handleInput()
 
-    gRenderer:DrawText2d(0,0, "Testing, testing, testing, testing, testing",
-                         Vector.Create(1,1,1,1), 200)
-
     if errorLastLine > -1 then
         local x = -256
         -- Print Errors

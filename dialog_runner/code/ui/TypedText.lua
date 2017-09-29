@@ -107,18 +107,18 @@ function TypedText:Render(renderer)
         printf("Cache size[%s] textSize[%s]", #cache, #self.mPageList[self.mPageIndex])
         --PrintTable(cache)
 
-        if next(cache) then
-            local gather = {}
+        -- if next(cache) then
+        --     local gather = {}
 
-            for k, v in ipairs(cache) do
-                local f = v.debugC:gsub("\n", "\\n")
-                table.insert(gather, f)
-            end
+        --     for k, v in ipairs(cache) do
+        --         local f = v.debugC:gsub("\n", "\\n")
+        --         table.insert(gather, f)
+        --     end
 
-            print(table.concat(gather))
-            print(self.mPageList[self.mPageIndex]:gsub("\n", "\\n"))
-            --PrintTable(cache)
-        end
+        --     print(table.concat(gather))
+        --     print(self.mPageList[self.mPageIndex]:gsub("\n", "\\n"))
+        --     --PrintTable(cache)
+        -- end
 
 
         -- In the cache the first \n is on the line with Hello
@@ -195,6 +195,12 @@ function TypedText:Render(renderer)
 
     -- This is a too local a scope, just to get colors working
     local controlStack = TextControlStack:Create()
+
+    --
+    -- Draw each cached character
+    -- [ ] Add `DrawCacheChar` function
+    -- [ ] Remove `DrawCache` from Bitmap font
+    --
 
     -- Mapping 0 - 1 to character index, needs taking inside this class
     gFont:DrawCache(gRenderer, cache, self.mWriteTween:Value(),
