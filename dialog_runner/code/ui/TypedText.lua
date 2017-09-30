@@ -198,12 +198,29 @@ function TypedText:Render(renderer)
 
     --
     -- Draw each cached character
-    -- [ ] Add `DrawCacheChar` function
+    -- [x] Add `DrawCacheChar` function
     -- [ ] Remove `DrawCache` from Bitmap font
     --
 
+    local function drawCache(trans01, Transition)
+        local index = math.floor(#cache*trans01)
+        function calc01(index, count, progress)
+            return (count*progress) - index
+        end
+        char01 = calc01(index, #cache, trans01)
+
+        Transition = Transition or function(_, _, _, data) return data end
+
+        for k, v in ipairs(cache) do
+
+            local charData = Transition(k, index, char01, v)
+            gFont:DrawCacheChar(gRenderer, charData)
+        end
+
+    end
+
     -- Mapping 0 - 1 to character index, needs taking inside this class
-    gFont:DrawCache(gRenderer, cache, self.mWriteTween:Value(),
+    drawCache(self.mWriteTween:Value(),
                     function(index, tranIndex, tran01, data)
 
                         local charData = DeepClone(data)

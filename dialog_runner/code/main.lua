@@ -6,7 +6,7 @@ Asset.Run('PlayController.lua')
 
 gRenderer = Renderer.Create()
 gFont = BitmapText:Create(DefaultFontDef)
-gPath = "example_8.txt"
+gPath = "example_1.txt"
 gIndicator = Sprite:Create()
 gIndicator:SetTexture(Texture.Find("indicator.png"))
 
