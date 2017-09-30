@@ -84,11 +84,6 @@ function TypedText:GetTagsForPage(index)
     return self.mTags[index] or {}
 end
 
-gDoPrint = true
-gPrintDone = false
-
-gDebugWritten = false
-
 function TypedText:Render(renderer)
 
     self.mFont:AlignText("left", "top")
@@ -100,98 +95,6 @@ function TypedText:Render(renderer)
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
 
-    -- Cache size[31] textSize[30] !!
-    -- I though there wer two newlines ... maybe I fixed this in the wrong place...
-    -- The newline is getting written twice.
-    if gDebugWritten == false then
-        printf("Cache size[%s] textSize[%s]", #cache, #self.mPageList[self.mPageIndex])
-        --PrintTable(cache)
-
-        -- if next(cache) then
-        --     local gather = {}
-
-        --     for k, v in ipairs(cache) do
-        --         local f = v.debugC:gsub("\n", "\\n")
-        --         table.insert(gather, f)
-        --     end
-
-        --     print(table.concat(gather))
-        --     print(self.mPageList[self.mPageIndex]:gsub("\n", "\\n"))
-        --     --PrintTable(cache)
-        -- end
-
-
-        -- In the cache the first \n is on the line with Hello
-        -- the second \n is with the second line
-
-        -- ["debugC"] = "H",
-        -- ["position"] =
-        -- {
-        --     -100,
-        --     13,
-        -- },
-        -- ["uvs"] =
-        -- {
-        --     0.2578125,
-        --     0.33333333333333,
-        --     0.3046875,
-        --     0.66666666666667,
-        -- },
-
-
---     {
---         ["debugC"] = ",",
---         ["position"] =
---         {
---             -75,
---             13,
---         },
---         ["uvs"] =
---         {
---             0.84375,
---             0,
---             0.8671875,
---             0.33333333333333,
---         },
---         ["color"] = Vector.Create(1, 1, 1, 1),
---     },
---     {
---         ["debugC"] = "\
--- ",
---         ["position"] =
---         {
---             -72,
---             13,
---         },
---         ["uvs"] =
---         {
---             0.65625,
---             0,
---             0.6796875,
---             0.33333333333333,
---         },
---         ["color"] = Vector.Create(1, 1, 1, 1),
---     },
---     {
---         ["debugC"] = "\
--- ",
---         ["position"] =
---         {
---             -103,
---             1,
---         },
---         ["uvs"] =
---         {
---             0.65625,
---             0,
---             0.6796875,
---             0.33333333333333,
---         },
---         ["color"] = Vector.Create(1, 1, 1, 1),
---     },
-
-        gDebugWritten = true
-    end
 
     -- This is a too local a scope, just to get colors working
     local controlStack = TextControlStack:Create()
@@ -202,86 +105,37 @@ function TypedText:Render(renderer)
     -- [ ] Remove `DrawCache` from Bitmap font
     --
 
-    local function drawCache(trans01, Transition)
-        local index = math.floor(#cache*trans01)
-        function calc01(index, count, progress)
-            return (count*progress) - index
-        end
-        char01 = calc01(index, #cache, trans01)
+    local page01 = self.mWriteTween:Value()
 
-        Transition = Transition or function(_, _, _, data) return data end
-
-        for k, v in ipairs(cache) do
-
-            local charData = Transition(k, index, char01, v)
-            gFont:DrawCacheChar(gRenderer, charData)
-        end
-
+    -- The character we want to write up to.
+    local writeLimit = math.floor(#cache*page01)
+    --
+    -- Gets the transition for the current character between 0 and 1
+    --
+    function CalcChar01(index, numberOfChars, progress)
+        return (numberOfChars*progress) - index
     end
-
-    -- Mapping 0 - 1 to character index, needs taking inside this class
-    drawCache(self.mWriteTween:Value(),
-                    function(index, tranIndex, tran01, data)
-
-                        local charData = DeepClone(data)
-
-                        -- Tag stuff
-                        local tags = self:GetTagsForPage(self.mPageIndex)
-
-                        -- controlStack: Process tags for page
-                        local doClose = 0
-                        local ti = index - 1
-                        if tags[ti] ~= nil then
-                            for _, v in ipairs(tags[ti]) do
-                                if v.op == "open"  then
-                                   controlStack:Push(v.instance)
-                                   if v.id == "pause" then
-                                        controlStack:Pop()
-                                   end
-                                elseif v.op == "close" then
-                                    doClose = doClose + 1
-                                end
-                            end
-                        end
-
-                        if self.mWriteTween:Value() > 0.96 and gDoPrint then
-                            local strBeingPrinted = self.mPageList[self.mPageIndex]
-
-                            local top = controlStack:Peek() or {}
-
-                            print(strBeingPrinted:sub(index,index), index, tostring(top.id))
-                            gPrintDone = true
-                        end
-
-                        -- if (controlStack:Peek()or{}).id == "color" then
-                        --     print("red: ", self.mPageList[self.mPageIndex][index])
-                        -- end
-                        charData.color = Vector.Create(1,1,1,1) -- <- consider fixing deep clone to handle vecs instead
-                        charData.color = Vector.Create(controlStack:AdjustCharacter(charData).color)
+    local char01 = CalcChar01(writeLimit, #cache, page01)
+    local tags = self:GetTagsForPage(self.mPageIndex)
 
 
-                        if index > tranIndex then
-                            -- Color isn't cloned correctly, needs to be a table
+    for charIndex, charData_ in ipairs(cache) do
+        local charData = DeepClone(charData_)
+        controlStack:ProcessOpenTags(charIndex, tags)
+        charData.color = Vector.Create(1,1,1,1) -- <- consider fixing deep clone to handle vecs instead
+        charData = controlStack:AdjustCharacter(charData)
 
-                            charData.color = Vector.Create(charData.color.x,
-                                                           charData.color.y,
-                                                           charData.color.z,
-                                                           0)
-                        end
+        if charIndex > writeLimit then
+            -- Color isn't cloned correctly, needs to be a table
+            charData.color = Vector.Create(charData.color.x,
+                                            charData.color.y,
+                                            charData.color.z,
+                                            0)
+        end
 
-                        for i = 1, doClose do
-                            controlStack:Pop()
-                        end
+        controlStack:ProcessCloseTags(charIndex, tags)
 
-                        -- oh this is mismatch between page and cache?
-                        if self.mPageList[self.mPageIndex]:sub(index,index) == 'y' then
-                            gYBeingRendered = true
-                        end
-                        return charData
-                    end)
-
-    if gPrintDone then
-        gDoPrint = false
+        gFont:DrawCacheChar(gRenderer, charData)
     end
 
 end

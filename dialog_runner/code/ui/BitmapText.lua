@@ -106,32 +106,12 @@ function BitmapText:RenderSubString(renderer, x, y, text, start, finish, color)
     end
 end
 
-function BitmapText:DrawCache(renderer, cache, trans01, Transition)
-
-    local index = math.floor(#cache*trans01)
-    function calc01(index, count, progress)
-        return (count*progress) - index
-    end
-    char01 = calc01(index, #cache, trans01)
-
-    Transition = Transition or function(_, _, _, data) return data end
-
-    for k, v in ipairs(cache) do
-
-        local charData = Transition(k, index, char01, v)
-        self:DrawCacheChar(renderer, charData)
-    end
-
-end
-
 function BitmapText:DrawCacheChar(renderer, charData)
     self.mSprite:SetUVs(unpack(charData.uvs))
     self.mSprite:SetPosition(unpack(charData.position))
     self.mSprite:SetColor(charData.color)
     renderer:DrawSprite(self.mSprite)
 end
-
-
 
 -- This is a duplicate of the above there must be a better way
 function BitmapText:CacheSubString(cache, x, y, text, start, finish, color)

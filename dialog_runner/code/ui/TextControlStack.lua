@@ -44,3 +44,26 @@ function TextControlStack:AdjustCharacter(c)
 
     return c
 end
+
+function TextControlStack:ProcessOpenTags(index, tags)
+    local ti = index - 1
+    if tags[ti] == nil then return end
+    for _, v in ipairs(tags[ti]) do
+        if v.op == "open"  then
+           self:Push(v.instance)
+           if v.id == "pause" then
+                self:Pop()
+           end
+        end
+    end
+end
+
+function TextControlStack:ProcessCloseTags(index, tags)
+    local ti = index - 1
+    if tags[ti] == nil then return end
+    for _, v in ipairs(tags[ti]) do
+        if v.op == "close" then
+            self:Pop()
+        end
+    end
+end
