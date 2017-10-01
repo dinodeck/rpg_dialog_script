@@ -32,6 +32,7 @@ Apply({
         "TextboxClip.lua",
         "Rect.lua",
         "TypedText.lua",
+        "TypedSequence.lua",
         "PlayController.lua",
         "TextControlStack.lua",
         "TagColor.lua",

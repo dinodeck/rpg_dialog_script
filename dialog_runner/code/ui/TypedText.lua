@@ -33,7 +33,9 @@ function TypedText:Create(params)
         mOnWaitToAdvance = params.OnWaitToAdvance or function() print("empty wait to advance") end,
         mOnBeforeIndexAdvance = params.OnBeforeIndexAdvance or function() end,
         mWriteCharDuration = params.writeCharDuration or 0.025,
-        mWriteTween = Tween:Create(0,0,0), -- tween for writing current page
+        mPageTween = Tween:Create(0,0,0), -- tween for writing current page
+
+        mSequenceList = {}
     }
 
     --
@@ -45,8 +47,26 @@ function TypedText:Create(params)
 
     setmetatable(this, self)
     local firstPage = this.mPageList[this.mPageIndex]
-    this.mWriteTween = Tween:Create(0, 1, this:CalcPageWriteDuration(firstPage))
+
+    -- sequence may be a list later
+    for k, v in ipairs(this.mPageList) do
+        table.insert(this.mSequenceList, this:PageToSequence(k))
+    end
+
+    this.mPageTween = Tween:Create(0, 1, this:CalcWriteDuration(firstPage))
     return this
+end
+
+function TypedText:PageToSequence(pageIndex)
+    local sequence = TypedSequence:Create()
+    local txt = self.mPageList[pageIndex]
+    local clip = { from = 1, to  = #txt }
+    clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to)
+    clip.charCount = (clip.to - clip.from) + 1
+
+    sequence:AddClip(clip)
+
+    return sequence
 end
 
 
@@ -59,9 +79,9 @@ end
 function TypedText:Update(dt)
 
     if self.mState == eTypedTextState.Write then
-        self.mWriteTween:Update(dt)
+        self.mPageTween:Update(dt)
 
-        if self.mWriteTween:IsFinished() then
+        if self.mPageTween:IsFinished() then
             self.mState = eTypedTextState.Wait
             self.mWaitCounter = 0
         end
@@ -95,20 +115,18 @@ function TypedText:Render(renderer)
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
 
+    local sequence = self.mSequenceList[self.mPageIndex]
+    local page01 = self.mPageTween:Value()
+
+    seqClip_, writeLimit, char01_ = sequence:CalcCharLimit01(page01)
+
 
     -- This is a too local a scope, just to get colors working
     local controlStack = TextControlStack:Create()
 
-    --
-    -- Draw each cached character
-    -- [x] Add `DrawCacheChar` function
-    -- [ ] Remove `DrawCache` from Bitmap font
-    --
-
-    local page01 = self.mWriteTween:Value()
 
     -- The character we want to write up to.
-    local writeLimit = math.floor(#cache*page01)
+    --local writeLimit = math.floor(#cache*page01)
     --
     -- Gets the transition for the current character between 0 and 1
     --
@@ -119,8 +137,10 @@ function TypedText:Render(renderer)
     local tags = self:GetTagsForPage(self.mPageIndex)
 
 
-    for charIndex, charData_ in ipairs(cache) do
-        local charData = DeepClone(charData_)
+    --for charIndex, charData_ in ipairs(cache) do
+    for i = 1, writeLimit do
+        local charIndex = i
+        local charData = DeepClone(cache[i])
         controlStack:ProcessOpenTags(charIndex, tags)
         charData.color = Vector.Create(1,1,1,1) -- <- consider fixing deep clone to handle vecs instead
         charData = controlStack:AdjustCharacter(charData)
@@ -142,8 +162,8 @@ end
 
 function TypedText:CalcDuration()
     local total = 0
-    for k, v in ipairs(self.mPageList) do
-        total = total + self:CalcPageWriteDuration(v) + self:PagePause()
+    for k, v in ipairs(self.mSequenceList) do
+        total = total + v:Duration() + self:PagePause()
     end
     return total
 end
@@ -152,16 +172,25 @@ function TypedText:Duration()
     return self:CalcDuration()
 end
 
-function TypedText:CalcPageWriteDuration(page)
+function TypedText:CalcWriteDuration(page, from, to)
     -- print()
+    from = from or 1
+    to = to or #page
+
+    local subStr = page:sub(from, to)
 
     -- In the future we might want to go char by char and see
     -- what effects it has on it to get the full duration
 
-    local charCount = #page
+    local charCount = #subStr
 
 
     return charCount * self.mWriteCharDuration
+end
+
+-- Eventually this should use the sequence and take in an index
+function TypedText:CalcPageDuration(pageIndex)
+    return self.mSequenceList[pageIndex]:Duration()
 end
 
 function TypedText:PagePause()
@@ -173,10 +202,7 @@ function TypedText:JumpTo01(value)
     local remainder = 0
     local suggestedIndex = 1
 
-    local totalTime = 0
-    for k, v in ipairs(self.mPageList) do
-        totalTime = totalTime + self:CalcPageWriteDuration(v) + self:PagePause()
-    end
+    local totalTime = self:CalcDuration()
 
     local trackTime = 0
     local normalTimePrev = 0
@@ -185,7 +211,7 @@ function TypedText:JumpTo01(value)
 
         -- Increment the time for the given page
         --     - includes pause
-        local writeDuration = self:CalcPageWriteDuration(v)
+        local writeDuration = self:CalcPageDuration(k)
         local pageDuration = writeDuration + self:PagePause()
 
         -- Convert to 01
@@ -217,9 +243,9 @@ function TypedText:JumpTo01(value)
 
 
     self.mPageIndex = suggestedIndex
-    local writeDuration = self:CalcPageWriteDuration(self.mPageList[suggestedIndex])
-    self.mWriteTween = Tween:Create(0, 1, writeDuration)
-    self.mWriteTween:SetValue01(remainder)
+    local writeDuration = self:CalcPageDuration(suggestedIndex)
+    self.mPageTween = Tween:Create(0, 1, writeDuration)
+    self.mPageTween:SetValue01(remainder)
 
 end
 
@@ -247,8 +273,8 @@ function TypedText:Advance()
     local nextPage = self.mPageList[self.mPageIndex]
 
     if nextPage then
-        local writeDuration = self:CalcPageWriteDuration(nextPage)
-        self.mWriteTween = Tween:Create(0, 1, writeDuration)
+        local writeDuration = self:CalcPageDuration(self.mPageIndex)
+        self.mPageTween = Tween:Create(0, 1, writeDuration)
     end
 
     self.mState = eTypedTextState.Write

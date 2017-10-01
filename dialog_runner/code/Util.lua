@@ -85,6 +85,11 @@ function Lerp(value, in0, in1, out0, out1)
     return result;
 end
 
+function Round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
+
 function PixelCoordsToUVs(tex, def)
     local texWidth = tex:GetWidth()
     local texHeight = tex:GetHeight()

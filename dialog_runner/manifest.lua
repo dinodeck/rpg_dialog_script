@@ -78,6 +78,10 @@ manifest =
         {
             path = "code/ui/TypedText.lua"
         },
+        ['TypedSequence.lua'] =
+        {
+            path = "code/ui/TypedSequence.lua"
+        },
         -- This movr M of a MVC but here it is in the UI folder
         ['PlayController.lua'] =
         {

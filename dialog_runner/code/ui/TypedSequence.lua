@@ -1,0 +1,63 @@
+TypedSequence = {}
+TypedSequence.__index = TypedSequence
+function TypedSequence:Create(list)
+    local this =
+    {
+        mClipList = {},
+        mTotalDuration = 0
+    }
+
+    setmetatable(this, self)
+    return this
+end
+
+function TypedSequence:AddClip(c)
+    table.insert(self.mClipList, c)
+    self.mTotalDuration = self.mTotalDuration + c.duration
+end
+
+function TypedSequence:Duration()
+    return self.mTotalDuration
+end
+
+function TypedSequence:CalcCharLimit01(progress01)
+    -- returns:
+    -- sequence clip
+    -- writeLimit, character to write up (inclusive) as index into page string
+    -- char01, the 0-1 transition of the final character
+    local totalDur = self.mTotalDuration
+    local accum = 0
+    local prevDur01 = 0
+
+    for k, v in ipairs(self.mClipList) do
+        accum = accum + v.duration
+        local dur01 = accum / totalDur
+
+        if progress01 >= prevDur01 and progress01 <= dur01 then
+            local c = Lerp(progress01, prevDur01, dur01, v.from, v.to)
+            local r = Lerp(c, math.max(v.from, Round(c)-0.5), math.min(v.to, Round(c)+0.5), 0, 1)
+            return k, Round(c), r
+        end
+        prevDur01 = dur01
+
+    end
+
+    return #data, data[#data].to, 1
+end
+
+
+--  # Functions needed to be a clip
+--
+--     Update
+--     Render
+--     JumpTo01
+--     Duration
+--
+-- # Next step
+--
+--  break text in renders and pauses
+--  once we have the cache chars, all that matters is
+--  a draw sequence
+--
+-- Measure base speed for sequence, char * default rate, or something per phememe
+--

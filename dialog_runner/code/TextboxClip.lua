@@ -67,7 +67,7 @@ function TextboxClip:GenerateBoxedTime()
     local ttext = self.mTextbox.mTypedText
 
     for k, v in ipairs(ttext.mPageList) do
-        table.insert(box, Entry("write", ttext:CalcPageWriteDuration(v)))
+        table.insert(box, Entry("write", ttext:CalcPageDuration(k)))
         table.insert(box, Entry("pause", ttext:PagePause()))
     end
 
