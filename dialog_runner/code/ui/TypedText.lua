@@ -109,35 +109,21 @@ function TypedText:Render(renderer)
     self.mFont:AlignText("left", "top")
 
     local cache = gFont:CacheText2d(
-        self.mBounds:Left(), -- + self.mTextArea:Left(),
-        self.mBounds:Top(), -- + self.mTextArea:Top(),
+        self.mBounds:Left(),
+        self.mBounds:Top(),
         self.mPageList[self.mPageIndex],
         Vector.Create(1,1,1,1),
         self.mBounds:Width())
 
+    local tags = self:GetTagsForPage(self.mPageIndex)
     local sequence = self.mSequenceList[self.mPageIndex]
     local page01 = self.mPageTween:Value()
 
-    seqClip_, writeLimit, char01_ = sequence:CalcCharLimit01(page01)
-
+    seqClip_, writeLimit, char01 = sequence:CalcCharLimit01(page01)
 
     -- This is a too local a scope, just to get colors working
     local controlStack = TextControlStack:Create()
 
-
-    -- The character we want to write up to.
-    --local writeLimit = math.floor(#cache*page01)
-    --
-    -- Gets the transition for the current character between 0 and 1
-    --
-    function CalcChar01(index, numberOfChars, progress)
-        return (numberOfChars*progress) - index
-    end
-    local char01 = CalcChar01(writeLimit, #cache, page01)
-    local tags = self:GetTagsForPage(self.mPageIndex)
-
-
-    --for charIndex, charData_ in ipairs(cache) do
     for i = 1, writeLimit do
         local charIndex = i
         local charData = DeepClone(cache[i])
