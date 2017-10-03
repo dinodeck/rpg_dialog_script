@@ -51,9 +51,6 @@ function TextControlStack:ProcessOpenTags(index, tags)
     for _, v in ipairs(tags[ti]) do
         if v.op == "open"  then
            self:Push(v.instance)
-           if v.id == "pause" then
-                self:Pop()
-           end
         end
     end
 end
