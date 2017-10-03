@@ -29,20 +29,28 @@ function TypedSequence:CalcCharLimit01(progress01)
     local accum = 0
     local prevDur01 = 0
 
+    local writeLimit = 0 -- for pause
+
     for k, v in ipairs(self.mClipList) do
+
         accum = accum + v.duration
         local dur01 = accum / totalDur
 
         if progress01 >= prevDur01 and progress01 <= dur01 then
-            local c = Lerp(progress01, prevDur01, dur01, v.from, v.to)
-            local r = Lerp(c, math.max(v.from, Round(c)-0.5), math.min(v.to, Round(c)+0.5), 0, 1)
-            return k, Round(c), r
+
+            if v.op == "pause" then
+                return k, writeLimit, 1
+            else
+                local c = Lerp(progress01, prevDur01, dur01, v.from, v.to)
+                local r = Lerp(c, math.max(v.from, Round(c)-0.5), math.min(v.to, Round(c)+0.5), 0, 1)
+                return k, Round(c), r
+            end
         end
         prevDur01 = dur01
-
+        writeLimit = v.to
     end
 
-    return #data, data[#data].to, 1
+    return #self.mClipList, self.mClipList[#self.mClipList].to, 1
 end
 
 

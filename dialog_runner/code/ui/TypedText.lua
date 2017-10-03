@@ -60,11 +60,22 @@ end
 function TypedText:PageToSequence(pageIndex)
     local sequence = TypedSequence:Create()
     local txt = self.mPageList[pageIndex]
-    local clip = { from = 1, to  = #txt }
-    clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to)
-    clip.charCount = (clip.to - clip.from) + 1
 
-    sequence:AddClip(clip)
+    -- break clip into two pieces.
+    -- Here we go, we need to though character by character
+
+
+    local clipB = {op="pause", duration = 2}
+
+    local clipA = { op= "write", from = 1, to  = #txt }
+    clipA.duration = self:CalcWriteDuration(txt, clipA.from, clipA.to)
+    clipA.charCount = (clipA.to - clipA.from) + 1
+
+    sequence:AddClip(clipB)
+    sequence:AddClip(clipA)
+    -- sequence:AddClip(clipB)
+
+    PrintTable(sequence)
 
     return sequence
 end
