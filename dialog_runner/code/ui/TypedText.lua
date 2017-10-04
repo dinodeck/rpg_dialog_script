@@ -63,26 +63,45 @@ function TypedText:PageToSequence(pageIndex)
     local tags = self:GetTagsForPage(pageIndex)
     local controlStack = TextControlStack:Create()
 
+    local function addWriteClip(from, to)
+        local clip = { op= "write", from = from, to = to }
+        clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to)
+        clip.charCount = (clip.to - clip.from) + 1
+        sequence:AddClip(clip)
+    end
+
+    local function addPauseClip(pauseTime)
+        sequence:AddClip({op="pause", duration = pauseTime})
+    end
+
     -- break clip into two pieces.
     -- Here we go, we need to though character by character
     local from = 1
     local to = 1
-    for i = 1, #txt do
+    -- +1 for tags right after the text
+    for i = 1, (#txt + 1) do
 
-        -- Need to pull all short tags out of here.
         controlStack:ProcessOpenTags(i, tags)
 
         -- Are we paused? (from-1, to-1)
+        local pauseTime = controlStack:PauseTime()
+        if pauseTime > 0 then
+
+            if from <= #txt then
+                addWriteClip(from, to)
+                from = to + 1
+            end
+            addPauseClip(pauseTime)
+
+        end
 
         to = i
 
         controlStack:ProcessCloseTags(i, tags)
 
         if i == #txt then
-            local clip = { op= "write", from = from, to = to }
-            clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to)
-            clip.charCount = (clip.to - clip.from) + 1
-            sequence:AddClip(clip)
+            addWriteClip(from, to)
+            from = to + 1
         end
 
     end
@@ -102,6 +121,7 @@ function TypedText:PageToSequence(pageIndex)
     -- sequence:AddClip(clipC)
     -- sequence:AddClip(clipB)
 
+    print("SEQUENCE")
     PrintTable(sequence)
 
     return sequence

@@ -1,9 +1,8 @@
-TagColor = {}
+TagColor = {id = "color", type="wide"}
 TagColor.__index = TagColor
 function TagColor:Create(color)
     local this =
     {
-        id = "color",
         mColor = color
     }
 

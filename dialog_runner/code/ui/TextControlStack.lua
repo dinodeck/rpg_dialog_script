@@ -47,6 +47,7 @@ end
 
 function TextControlStack:ProcessOpenTags(index, tags)
     local ti = index - 1
+
     if tags[ti] == nil then return end
     for _, v in ipairs(tags[ti]) do
         if v.op == "open"  then
@@ -59,8 +60,18 @@ function TextControlStack:ProcessCloseTags(index, tags)
     local ti = index - 1
     if tags[ti] == nil then return end
     for _, v in ipairs(tags[ti]) do
-        if v.op == "close" then
+        if v.op == "close" or v.instance.type == "short" then
             self:Pop()
         end
     end
+end
+
+function TextControlStack:PauseTime()
+    local pauseTime = 0
+    for k, v in ipairs(self.mStack) do
+        if v.id == TagPause.id then
+            pauseTime = pauseTime + v.mDuration
+        end
+    end
+    return pauseTime
 end

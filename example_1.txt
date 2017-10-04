@@ -1,6 +1,5 @@
 Major:
-So, in conclusion...<pause>
-
+So,<pause> in conclusion...
 Head north to the mine.
 
 Find the <red>skull ruby</red>.

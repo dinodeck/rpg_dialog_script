@@ -6,7 +6,7 @@ local goldTag = TagColor:Create(Vector.Create(0.972, 0.794, 0.102))
 TagDB =
 {
     ['red'] = function() return redTag end,
-    ['pause'] = function() return TagPause:Create(1) end,
+    ['pause'] = function() return TagPause:Create(0.5) end,
 
 
     -- FOR ARTICLE
