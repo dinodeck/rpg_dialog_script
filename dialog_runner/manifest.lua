@@ -99,11 +99,14 @@ manifest =
         {
             path = "code/ui/tag/TagPause.lua"
         },
+        ['TagSpeed.lua'] =
+        {
+            path = "code/ui/tag/TagSpeed.lua"
+        },
         ['TagDB.lua'] =
         {
             path = "code/TagDB.lua"
         }
-
     },
     textures =
     {

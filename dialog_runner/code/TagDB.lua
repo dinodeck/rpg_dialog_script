@@ -11,7 +11,9 @@ TagDB =
 
     -- FOR ARTICLE
     ['keyword'] = function() return goldTag end,
-    ['script']= function() return { ['AdjustColor'] = function() end} end,
+    ['script'] = function() return { ['AdjustColor'] = function() end} end,
+    ['fast'] = function() return TagSpeed:Create(0.5) end,
+    ['slow'] = function() return TagSpeed:Create(10.0) end,
 
 
     TagsForParser = function(self)
@@ -23,6 +25,8 @@ TagDB =
             ['red'] = { type = "Wide" },
             ['pause'] = { type = "Short" },
             ['keyword'] = { type = "Wide" },
+            ['slow'] = { type = "Wide" },
+            ['fast'] = { type = "Wide" },
             ['script'] = { type = "Cut" },
         }
     end

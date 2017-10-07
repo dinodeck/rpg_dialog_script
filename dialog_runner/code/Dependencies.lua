@@ -37,6 +37,7 @@ Apply({
         "TextControlStack.lua",
         "TagColor.lua",
         "TagPause.lua",
+        "TagSpeed.lua",
         "TagDB.lua", -- has to come after tag defs
     },
     function(v) Asset.Run(v) end)

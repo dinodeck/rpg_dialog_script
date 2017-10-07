@@ -63,9 +63,10 @@ function TypedText:PageToSequence(pageIndex)
     local tags = self:GetTagsForPage(pageIndex)
     local controlStack = TextControlStack:Create()
 
-    local function addWriteClip(from, to)
+    local function addWriteClip(from, to, speedMult)
+        speedMult = speedMult or 1
         local clip = { op= "write", from = from, to = to }
-        clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to)
+        clip.duration = self:CalcWriteDuration(txt, clip.from, clip.to) * speedMult
         clip.charCount = (clip.to - clip.from) + 1
         sequence:AddClip(clip)
     end
@@ -78,26 +79,42 @@ function TypedText:PageToSequence(pageIndex)
     -- Here we go, we need to though character by character
     local from = 1
     local to = 1
+    local speedTagCount = 0
+    local prevSpeed = 1
     -- +1 for tags right after the text
     for i = 1, (#txt + 1) do
 
         controlStack:ProcessOpenTags(i, tags)
+
+        local newCount = controlStack:Count({id = "speed"})
+
 
         -- Are we paused? (from-1, to-1)
         local pauseTime = controlStack:PauseTime()
         if pauseTime > 0 then
 
             if from <= #txt then
-                addWriteClip(from, to)
+                addWriteClip(from, to, prevSpeed)
                 from = to + 1
+                prevSpeed = controlStack:SpeedMultiplier()
             end
             addPauseClip(pauseTime)
 
+        elseif newCount ~= speedTagCount then
+            if from <= #txt then
+                addWriteClip(from, to, prevSpeed)
+                from = to + 1
+                prevSpeed = controlStack:SpeedMultiplier()
+            end
         end
+
+        -- if there are close tags that change speed
+        -- then clip until here
 
         to = i
 
         controlStack:ProcessCloseTags(i, tags)
+        speedTagCount = newCount
 
         if i == #txt then
             addWriteClip(from, to)

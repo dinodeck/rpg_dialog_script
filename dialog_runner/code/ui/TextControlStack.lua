@@ -66,6 +66,27 @@ function TextControlStack:ProcessCloseTags(index, tags)
     end
 end
 
+function TextControlStack:Count(t)
+    local count = 0
+    for k, v in ipairs(self.mStack) do
+
+        local idMatch = true
+        if t.id and t.id ~= v.id then
+            idMatch = false
+        end
+
+        local opMatch = true
+        if t.op and t.op ~= v.op then
+            opMatch = false
+        end
+
+        if idMatch and opMatch then
+            count = count + 1
+        end
+    end
+    return count
+end
+
 function TextControlStack:PauseTime()
     local pauseTime = 0
     for k, v in ipairs(self.mStack) do
@@ -74,4 +95,14 @@ function TextControlStack:PauseTime()
         end
     end
     return pauseTime
+end
+
+function TextControlStack:SpeedMultiplier()
+    local multiplier = 1
+    for k, v in ipairs(self.mStack) do
+        if v.id == TagSpeed.id then
+            multiplier = multiplier * v.mMultiplier
+        end
+    end
+    return multiplier
 end
