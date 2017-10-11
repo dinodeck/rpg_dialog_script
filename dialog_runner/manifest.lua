@@ -103,6 +103,10 @@ manifest =
         {
             path = "code/ui/tag/TagSpeed.lua"
         },
+        ['TagScript.lua'] =
+        {
+            path = "code/ui/tag/TagScript.lua"
+        },
         ['TagDB.lua'] =
         {
             path = "code/TagDB.lua"

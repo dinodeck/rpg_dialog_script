@@ -227,13 +227,13 @@ function RawTagsToLookUp(tags)
     --
     -- table[line][offset] = { list of tags }
 
-    local function CreateTagInstance(id)
+    local function CreateTagInstance(id, tagDef)
         local tagType = TagDB[id]
         if tagType == null then
             printf("Error: Failed to find tag type [%s]", tagType)
             return
         end
-        return tagType() -- creates an instance
+        return tagType(tagDef) -- creates an instance
     end
 
 
@@ -244,7 +244,7 @@ function RawTagsToLookUp(tags)
 
         if v.op == "open" then
             print("CREATING INSTANCE", v.id)
-            v.instance = CreateTagInstance(v.id)
+            v.instance = CreateTagInstance(v.id, v)
         end
 
         lookup[line] = lookup[line] or {}

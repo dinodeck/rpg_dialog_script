@@ -13,3 +13,11 @@ end
 function TagPause:AdjustColor(c)
     return c
 end
+
+function TagPause:Enter()
+
+end
+
+function TagPause:Exit()
+
+end

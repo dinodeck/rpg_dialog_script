@@ -8,4 +8,5 @@ Bring it back here to me.
 
 Hero:
 Agreed
+<script>print("Hello")</script>
 

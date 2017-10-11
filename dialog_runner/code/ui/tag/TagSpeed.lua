@@ -13,3 +13,11 @@ end
 function TagSpeed:AdjustColor(c)
     return c
 end
+
+function TagSpeed:Enter()
+
+end
+
+function TagSpeed:Exit()
+
+end

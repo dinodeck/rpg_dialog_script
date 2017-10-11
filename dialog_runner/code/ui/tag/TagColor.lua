@@ -17,3 +17,11 @@ function TagColor:AdjustColor(c)
     c:SetXyzw(self.mColor:X(), self.mColor:Y(), self.mColor:Z(), c:W())
     return c
 end
+
+function TagColor:Enter()
+
+end
+
+function TagColor:Exit()
+
+end
