@@ -21,3 +21,7 @@ end
 function TagSpeed:Exit()
 
 end
+
+function TagScript:Reset()
+
+end
