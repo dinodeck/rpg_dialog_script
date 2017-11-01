@@ -35,7 +35,11 @@ function TypedText:Create(params)
         mWriteCharDuration = params.writeCharDuration or 0.025,
         mPageTween = Tween:Create(0,0,0), -- tween for writing current page
 
-        mSequenceList = {}
+        mSequenceList = {},
+
+        -- Track Progress
+        mPrevPageIndex = 1,
+        mPrevPage01 = 0
     }
 
     --
@@ -78,7 +82,8 @@ function TypedText:PageToSequence(pageIndex)
         sequence:AddClip({op="pause", duration = pauseTime})
     end
 
-    local function addScript()
+    local function addScriptClip(scriptTag)
+        sequence:AddClip({op="script", scriptTag = scriptTag, duration = 0})
     end
 
     -- break clip into two pieces.
@@ -116,8 +121,7 @@ function TypedText:PageToSequence(pageIndex)
 
         local scriptTags = controlStack:GetScriptTags()
         for k, v in ipairs(scriptTags) do
-            print("SCRIPT TAG:", v.mScriptStr)
-            PrintTable(v)
+            addScriptClip(v)
         end
 
         -- if there are close tags that change speed
@@ -231,6 +235,17 @@ function TypedText:Render(renderer)
         gFont:DrawCacheChar(gRenderer, charData)
     end
 
+    -- Fire in range
+    if self.mPageIndex > self.mPrevPageIndex then
+        local prevSequence = self.mSequenceList[self.mPrevPageIndex]
+        prevSequence:FireScriptsInRange(self.mPrevPage01, 1)
+        self.mPrevPage01 = 0
+    end
+    sequence:FireScriptsInRange(self.mPrevPage01, page01)
+
+    self.mPrevPageIndex = self.mPageIndex
+    self.mPrevPage01 = self.mPageTween:Value()
+
 end
 
 function TypedText:CalcDuration()
@@ -331,6 +346,18 @@ function TypedText:JumpTo01(value)
     local writeDuration = self:CalcPageDuration(suggestedIndex)
     self.mPageTween = Tween:Create(0, 1, writeDuration)
     self.mPageTween:SetValue01(remainder)
+
+
+    -- Update prev page index - can jump backwards and forwards
+    -- if jumped backwards then set values to that
+    -- if jumped forward leave
+    if self.mPrevPageIndex > self.mPageIndex then
+        self.mPrevPageIndex = self.mPrevPageIndex
+        if self.mPrevPage01 > self.mPageTween:Value() then
+            self.mPrevPage01 = self.mPageTween:Value()
+        end
+    end
+
 end
 
 function TypedText:DrawBounds()
@@ -352,6 +379,13 @@ function TypedText:Advance()
     if self.mState == eTypedTextState.Write then
         print("ERROR: Called advance in write state. (This should skip)")
     end
+
+    -- Fire events
+    local sequence = self.mSequenceList[self.mPageIndex]
+    sequence:FireScriptsInRange(self.mPrevPage01, 1)
+    self.mPrevPageIndex = self.mPageIndex
+    self.mPrevPage01 = 0
+
 
     self.mPageIndex = self.mPageIndex + 1
     local nextPage = self.mPageList[self.mPageIndex]

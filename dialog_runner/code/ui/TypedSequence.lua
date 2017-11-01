@@ -53,6 +53,27 @@ function TypedSequence:CalcCharLimit01(progress01)
     return #self.mClipList, self.mClipList[#self.mClipList].to, 1
 end
 
+function TypedSequence:FireScriptsInRange(from01, to01)
+
+    local totalDur = self.mTotalDuration
+    local accum = 0
+    local prevDur01 = 0
+
+    for k, v in ipairs(self.mClipList) do
+
+        accum = accum + v.duration
+        local dur01 = accum / totalDur
+
+        if from01 >= prevDur01 and to01 <= dur01 then
+
+            if v.op == "script" then
+                v.scriptTag:Enter() -- this can be trigger multiple times
+            end
+        end
+        prevDur01 = dur01
+    end
+end
+
 
 --  # Functions needed to be a clip
 --
