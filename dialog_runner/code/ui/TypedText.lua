@@ -45,6 +45,9 @@ function TypedText:Create(params)
     -- mTags. This is just ignored for now.
     --
 
+    print("Tags")
+    PrintTable(this.mTags or {})
+
     setmetatable(this, self)
     local firstPage = this.mPageList[this.mPageIndex]
 
@@ -73,6 +76,9 @@ function TypedText:PageToSequence(pageIndex)
 
     local function addPauseClip(pauseTime)
         sequence:AddClip({op="pause", duration = pauseTime})
+    end
+
+    local function addScript()
     end
 
     -- break clip into two pieces.
@@ -106,6 +112,12 @@ function TypedText:PageToSequence(pageIndex)
                 from = to + 1
                 prevSpeed = controlStack:SpeedMultiplier()
             end
+        end
+
+        local scriptTags = controlStack:GetScriptTags()
+        for k, v in ipairs(scriptTags) do
+            print("SCRIPT TAG:", v.mScriptStr)
+            PrintTable(v)
         end
 
         -- if there are close tags that change speed
@@ -260,6 +272,18 @@ end
 
 function TypedText:JumpTo01(value)
 
+    --
+    -- Get the previous char index
+    --
+    local prevWriteLimit = 0
+    local prevPage = self.mPageIndex
+    do
+        local tags = self:GetTagsForPage(self.mPageIndex)
+        local sequence = self.mSequenceList[self.mPageIndex]
+        local page01 = self.mPageTween:Value()
+        _, prevWriteLimit, _ = sequence:CalcCharLimit01(page01)
+    end
+
     local remainder = 0
     local suggestedIndex = 1
 
@@ -307,7 +331,6 @@ function TypedText:JumpTo01(value)
     local writeDuration = self:CalcPageDuration(suggestedIndex)
     self.mPageTween = Tween:Create(0, 1, writeDuration)
     self.mPageTween:SetValue01(remainder)
-
 end
 
 function TypedText:DrawBounds()

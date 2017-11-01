@@ -51,7 +51,7 @@ function TextControlStack:ProcessOpenTags(index, tags)
     if tags[ti] == nil then return end
     for _, v in ipairs(tags[ti]) do
         if v.op == "open"  then
-           self:Push(v.instance)
+            self:Push(v.instance)
         end
     end
 end
@@ -95,6 +95,21 @@ function TextControlStack:PauseTime()
         end
     end
     return pauseTime
+end
+
+function TextControlStack:GetScriptTags()
+
+    local scriptTagList = {}
+    for i = #self.mStack, 1, -1 do
+        local v = self.mStack[i]
+
+        if v.id == "script" then
+            table.insert(scriptTagList, v)
+        end
+
+    end
+
+    return scriptTagList
 end
 
 function TextControlStack:SpeedMultiplier()

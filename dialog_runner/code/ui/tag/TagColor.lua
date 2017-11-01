@@ -26,6 +26,6 @@ function TagColor:Exit()
 
 end
 
-function TagScript:Reset()
+function TagColor:Reset()
 
 end
