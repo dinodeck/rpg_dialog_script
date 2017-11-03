@@ -287,18 +287,6 @@ end
 
 function TypedText:JumpTo01(value)
 
-    --
-    -- Get the previous char index
-    --
-    local prevWriteLimit = 0
-    local prevPage = self.mPageIndex
-    do
-        local tags = self:GetTagsForPage(self.mPageIndex)
-        local sequence = self.mSequenceList[self.mPageIndex]
-        local page01 = self.mPageTween:Value()
-        _, prevWriteLimit, _ = sequence:CalcCharLimit01(page01)
-    end
-
     local remainder = 0
     local suggestedIndex = 1
 
