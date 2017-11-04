@@ -276,7 +276,6 @@ function TypedText:CalcWriteDuration(page, from, to)
     return charCount * self.mWriteCharDuration
 end
 
--- Eventually this should use the sequence and take in an index
 function TypedText:CalcPageDuration(pageIndex)
     return self.mSequenceList[pageIndex]:Duration()
 end
@@ -285,7 +284,48 @@ function TypedText:PagePause()
     return 1.0
 end
 
-function TypedText:JumpTo01(value)
+function TypedText:JumpTo01(value, doEvents)
+
+
+    -- print("TypedText:Jump01(" .. tostring(value) .. ")")
+    -- PrintTable(self.mSequenceList)
+
+    -- When we jump to the end we get value = 1 and passed this
+    -- So there's only one page, containing the type info and script
+    --
+    -- ... it's probably hitting the part below that currently has no jump info
+    --
+
+    -- self.mSequenceList =
+    -- {
+    --     {
+    --         ["mClipList"] =
+    --         {
+    --             {
+    --                 ["op"] = "write",
+    --                 ["to"] = 6,
+    --                 ["from"] = 1,
+    --                 ["charCount"] = 6,
+    --                 ["duration"] = 0.15,
+    --             },
+    --             {
+    --                 ["op"] = "script",
+    --                 ["scriptTag"] =
+    --                 {
+    --                     ["mScriptStr"] = "print(\"Hello\")",
+    --                     ["mDebugBlockRun"] = false,
+    --                     ["mFired"] = false,
+    --                 },
+    --                 ["duration"] = 0,
+    --             },
+    --         },
+    --         ["mTotalDuration"] = 0.15,
+    --     },
+    -- },
+
+    -- value is 0.5 say
+    -- normal write time
+
 
     local remainder = 0
     local suggestedIndex = 1
@@ -294,39 +334,63 @@ function TypedText:JumpTo01(value)
 
     local trackTime = 0
     local normalTimePrev = 0
-    -- local jumpDone = false
+
+    local jumpDone = false
+
     for k, v in ipairs(self.mPageList) do
 
-        -- Increment the time for the given page
-        --     - includes pause
-        local writeDuration = self:CalcPageDuration(k)
-        local pageDuration = writeDuration + self:PagePause()
-
-        -- Convert to 01
-        -- Normaltime represents the end of the current timebox
-        local normalTimePage = (trackTime + pageDuration) / totalTime
-        local normalTimeWrite = (trackTime + writeDuration) / totalTime
-
-        -- See if the value is in the current interval
-        if normalTimePage >= value then
-            -- Decide what to do.
-            suggestedIndex = k
-
-            if value > normalTimeWrite then
-                -- We've finished writing and we're waiting
-                remainder = 1
-                local waitRemainder = Lerp(value, normalTimeWrite, normalTimePage, 0, 1)
-                self.mState = eTypedTextState.Wait
-                self.mWaitCounter = self:PagePause() * waitRemainder
-            else
-                remainder = Lerp(value, normalTimePrev, normalTimeWrite, 0, 1)
-                self.mState = eTypedTextState.Write
+        if jumpDone then
+           -- print("JUMP DONE", self.mSequenceList[k].op)
+            --PrintTable(self.mSequenceList[k])
+            if doEvents then
+                self.mSequenceList[k]:ResetScriptsInRange(0, 1)
             end
-            break
-        end
+        else
+            -- Increment the time for the given page
+            --     - includes pause
+            local writeDuration = self:CalcPageDuration(k)
+            local pageDuration = writeDuration + self:PagePause()
 
-        trackTime = trackTime + pageDuration
-        normalTimePrev = normalTimePage
+            -- Convert to 01
+            -- Normaltime represents the end of the current timebox
+            local normalTimePage = (trackTime + pageDuration) / totalTime
+            local normalTimeWrite = (trackTime + writeDuration) / totalTime
+
+            -- See if the value is in the current interval
+            if normalTimePage >= value then
+                -- Decide what to do.
+                suggestedIndex = k
+
+                if value > normalTimeWrite then
+                    -- We've finished writing and we're waiting
+                    remainder = 1
+                    local waitRemainder = Lerp(value, normalTimeWrite, normalTimePage, 0, 1)
+                    self.mState = eTypedTextState.Wait
+                    self.mWaitCounter = self:PagePause() * waitRemainder
+
+                    if doEvents then
+                        self.mSequenceList[k]:FireScriptsInRange(0, 1)
+                    end
+                else
+                    remainder = Lerp(value, normalTimePrev, normalTimeWrite, 0, 1)
+                    self.mState = eTypedTextState.Write
+
+                    if doEvents then
+                        self.mSequenceList[k]:FireScriptsInRange(0, remainder)
+                         self.mSequenceList[k]:ResetScriptsInRange(remainder, 1)
+                    end
+
+                end
+                jumpDone = true
+            else
+                if doEvents then
+                    self.mSequenceList[k]:FireScriptsInRange(0, 1)
+                end
+            end
+
+            trackTime = trackTime + pageDuration
+            normalTimePrev = normalTimePage
+        end
     end
 
 
@@ -339,6 +403,10 @@ function TypedText:JumpTo01(value)
     -- Update prev page index - can jump backwards and forwards
     -- if jumped backwards then set values to that
     -- if jumped forward leave
+
+
+
+
     if self.mPrevPageIndex > self.mPageIndex then
         self.mPrevPageIndex = self.mPrevPageIndex
         if self.mPrevPage01 > self.mPageTween:Value() then

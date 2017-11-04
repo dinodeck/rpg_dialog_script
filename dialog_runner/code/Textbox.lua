@@ -61,8 +61,6 @@ function Textbox:Create(params)
         OnWaitToAdvance = function() this:mOnWaitToAdvance() end,
     }
 
-    print("DEBUG-Start", self.mTime or 0)
-
     setmetatable(this, self)
     return this
 end
@@ -127,8 +125,7 @@ function Textbox:Duration()
     return self.mIntroDuration + self.mTypedText:Duration() + self.mOutroDuration
 end
 
-
-function Textbox:JumpTo01(value)
+function Textbox:JumpTo01(value, doEvents)
 
     local duration = self:Duration()
     local timePassed = Clamp(duration * value, 0, duration)
@@ -141,17 +138,17 @@ function Textbox:JumpTo01(value)
         self.mAppearTween = Tween:Create(0, 1, self.mIntroDuration, Tween.Linear)
         local tween01 = Lerp(timePassed, 0, self.mIntroDuration, 0, 1)
         self.mAppearTween:SetValue01(tween01)
-        self.mTypedText:JumpTo01(0)
+        self.mTypedText:JumpTo01(0, doEvents)
     -- Are we in the middle bit:
     elseif timePassed < writeThreshold then
         self.mState = eTextboxState.Write
         self.mAppearTween = Tween:Create(1, 1, 0, Tween.Linear)
         local tween01 = Lerp(timePassed, self.mIntroDuration, writeThreshold, 0, 1)
-        self.mTypedText:JumpTo01(tween01)
+        self.mTypedText:JumpTo01(tween01, doEvents)
     else
         -- the out tween
         self.mState = eTextboxState.Outro
-        self.mTypedText:JumpTo01(1)
+        self.mTypedText:JumpTo01(1, doEvents)
         self.mAppearTween = Tween:Create(1, 0, self.mIntroDuration, Tween.Linear)
         local tween10 = Lerp(timePassed, writeThreshold, duration, 0, 1)
         self.mAppearTween:SetValue01(tween10)
