@@ -118,8 +118,7 @@ function FixedSequence:GenerateBoxedTime()
 
 end
 
-local h = 0
-function FixedSequence:JumpTo01(value, doEvents)
+function FixedSequence:JumpTo01(value)
 
     -- Need to find the clip, then how much we're into the clip
     -- and tell it to jump to that point
@@ -137,13 +136,13 @@ function FixedSequence:JumpTo01(value, doEvents)
             if findActiveClip then
                 -- We're in this clip
                 local currentClip01 = Lerp(self.mRuntime, prevTime, time, 0, 1)
-                v:JumpTo01(currentClip01, doEvents)
+                v:JumpTo01(currentClip01)
                 findActiveClip = false
             else
-                v:JumpTo01(0, doEvents)
+                v:JumpTo01(0)
             end
         else
-            v:JumpTo01(1, doEvents)
+            v:JumpTo01(1)
         end
     end
 
@@ -408,10 +407,10 @@ function JumpTrackBar(v)
     trackingTween:SetValue01(v)
 end
 
-function JumpTo01(value, doEvents)
+function JumpTo01(value)
     if gConversation then
         stopButton:OnClick()
-        gConversation.sequence:JumpTo01(value, doEvents)
+        gConversation.sequence:JumpTo01(value)
         JumpTrackBar(value)
         gTrackBar:SetValue01(value)
     end
@@ -433,7 +432,7 @@ gPlayController = PlayController:Create
         trackingTween = Tween:Create(0, 1, trackTime)
         gTrackBar:SetValue01(0)
         if gConversation then
-            gConversation.sequence:JumpTo01(0, true)
+            gConversation.sequence:JumpTo01(0)
         end
     end,
     OnAtEnd = function()
@@ -485,7 +484,7 @@ function handleInput()
     if Keyboard.JustPressed(KEY_1) then JumpTo01(0.05) end
     if Keyboard.JustPressed(KEY_2) then JumpTo01(0.25) end
     if Keyboard.JustPressed(KEY_3) then JumpTo01(0.333) end
-    if Keyboard.JustPressed(KEY_4) then JumpTo01(0.99) end
+    if Keyboard.JustPressed(KEY_4) then JumpTo01(0.45) end
 end
 
 function MouseInTracker()
@@ -570,9 +569,9 @@ function update()
         gGhostTrack:SetPosition(cPos:X(), gTrackBar:Y())
         gRenderer:DrawSprite(gGhostTrack)
 
-        if Mouse.Held(MOUSE_BUTTON_LEFT) or Mouse.JustReleased(MOUSE_BUTTON_LEFT) then
+        if Mouse.Held(MOUSE_BUTTON_LEFT) then
             local v = Lerp(cPos:X(), gTrackBar:LeftTrimmed(), gTrackBar:RightTrimmed(), 0, 1)
-            JumpTo01(v, Mouse.JustReleased(MOUSE_BUTTON_LEFT) )
+            JumpTo01(v)
         end
     end
 end

@@ -12,17 +12,9 @@ TagDB =
     -- FOR ARTICLE
     ['keyword'] = function() return goldTag end,
     ['script'] = function(tag)
-        -- print("-= SCRIPT TAG =-")
-        -- PrintTable(tag)
-        --
-        -- {
-        --     ["line"] = 1,
-        --     ["offset"] = 6,
-        --     ["data"] = "print(\"Hello\")",
-        --     ["id"] = "script",
-        --     ["op"] = "open",
-        -- },
-        return TagScript:Create(tag.data)
+        print("-= SCRIPT TAG =-")
+        PrintTable(tag)
+        return { ['AdjustColor'] = function() end}
     end,
     ['fast'] = function() return TagSpeed:Create(0.5) end,
     ['slow'] = function() return TagSpeed:Create(10.0) end,

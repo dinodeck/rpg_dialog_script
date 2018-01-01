@@ -35,11 +35,7 @@ function TypedText:Create(params)
         mWriteCharDuration = params.writeCharDuration or 0.025,
         mPageTween = Tween:Create(0,0,0), -- tween for writing current page
 
-        mSequenceList = {},
-
-        -- Track Progress
-        mPrevPageIndex = 1,
-        mPrevPage01 = 0
+        mSequenceList = {}
     }
 
     --
@@ -48,9 +44,6 @@ function TypedText:Create(params)
     -- Due to pagify the `mPageIndex` does not necessarily correlate with
     -- mTags. This is just ignored for now.
     --
-
-    print("Tags")
-    PrintTable(this.mTags or {})
 
     setmetatable(this, self)
     local firstPage = this.mPageList[this.mPageIndex]
@@ -80,10 +73,6 @@ function TypedText:PageToSequence(pageIndex)
 
     local function addPauseClip(pauseTime)
         sequence:AddClip({op="pause", duration = pauseTime})
-    end
-
-    local function addScriptClip(scriptTag)
-        sequence:AddClip({op="script", scriptTag = scriptTag, duration = 0})
     end
 
     -- break clip into two pieces.
@@ -117,11 +106,6 @@ function TypedText:PageToSequence(pageIndex)
                 from = to + 1
                 prevSpeed = controlStack:SpeedMultiplier()
             end
-        end
-
-        local scriptTags = controlStack:GetScriptTags()
-        for k, v in ipairs(scriptTags) do
-            addScriptClip(v)
         end
 
         -- if there are close tags that change speed
@@ -235,17 +219,6 @@ function TypedText:Render(renderer)
         gFont:DrawCacheChar(gRenderer, charData)
     end
 
-    -- Fire in range
-    if self.mPageIndex > self.mPrevPageIndex then
-        local prevSequence = self.mSequenceList[self.mPrevPageIndex]
-        prevSequence:FireScriptsInRange(self.mPrevPage01, 1)
-        self.mPrevPage01 = 0
-    end
-    sequence:FireScriptsInRange(self.mPrevPage01, page01)
-
-    self.mPrevPageIndex = self.mPageIndex
-    self.mPrevPage01 = self.mPageTween:Value()
-
 end
 
 function TypedText:CalcDuration()
@@ -276,6 +249,7 @@ function TypedText:CalcWriteDuration(page, from, to)
     return charCount * self.mWriteCharDuration
 end
 
+-- Eventually this should use the sequence and take in an index
 function TypedText:CalcPageDuration(pageIndex)
     return self.mSequenceList[pageIndex]:Duration()
 end
@@ -284,48 +258,7 @@ function TypedText:PagePause()
     return 1.0
 end
 
-function TypedText:JumpTo01(value, doEvents)
-
-
-    -- print("TypedText:Jump01(" .. tostring(value) .. ")")
-    -- PrintTable(self.mSequenceList)
-
-    -- When we jump to the end we get value = 1 and passed this
-    -- So there's only one page, containing the type info and script
-    --
-    -- ... it's probably hitting the part below that currently has no jump info
-    --
-
-    -- self.mSequenceList =
-    -- {
-    --     {
-    --         ["mClipList"] =
-    --         {
-    --             {
-    --                 ["op"] = "write",
-    --                 ["to"] = 6,
-    --                 ["from"] = 1,
-    --                 ["charCount"] = 6,
-    --                 ["duration"] = 0.15,
-    --             },
-    --             {
-    --                 ["op"] = "script",
-    --                 ["scriptTag"] =
-    --                 {
-    --                     ["mScriptStr"] = "print(\"Hello\")",
-    --                     ["mDebugBlockRun"] = false,
-    --                     ["mFired"] = false,
-    --                 },
-    --                 ["duration"] = 0,
-    --             },
-    --         },
-    --         ["mTotalDuration"] = 0.15,
-    --     },
-    -- },
-
-    -- value is 0.5 say
-    -- normal write time
-
+function TypedText:JumpTo01(value)
 
     local remainder = 0
     local suggestedIndex = 1
@@ -334,63 +267,39 @@ function TypedText:JumpTo01(value, doEvents)
 
     local trackTime = 0
     local normalTimePrev = 0
-
-    local jumpDone = false
-
+    -- local jumpDone = false
     for k, v in ipairs(self.mPageList) do
 
-        if jumpDone then
-           -- print("JUMP DONE", self.mSequenceList[k].op)
-            --PrintTable(self.mSequenceList[k])
-            if doEvents then
-                self.mSequenceList[k]:ResetScriptsInRange(0, 1)
-            end
-        else
-            -- Increment the time for the given page
-            --     - includes pause
-            local writeDuration = self:CalcPageDuration(k)
-            local pageDuration = writeDuration + self:PagePause()
+        -- Increment the time for the given page
+        --     - includes pause
+        local writeDuration = self:CalcPageDuration(k)
+        local pageDuration = writeDuration + self:PagePause()
 
-            -- Convert to 01
-            -- Normaltime represents the end of the current timebox
-            local normalTimePage = (trackTime + pageDuration) / totalTime
-            local normalTimeWrite = (trackTime + writeDuration) / totalTime
+        -- Convert to 01
+        -- Normaltime represents the end of the current timebox
+        local normalTimePage = (trackTime + pageDuration) / totalTime
+        local normalTimeWrite = (trackTime + writeDuration) / totalTime
 
-            -- See if the value is in the current interval
-            if normalTimePage >= value then
-                -- Decide what to do.
-                suggestedIndex = k
+        -- See if the value is in the current interval
+        if normalTimePage >= value then
+            -- Decide what to do.
+            suggestedIndex = k
 
-                if value > normalTimeWrite then
-                    -- We've finished writing and we're waiting
-                    remainder = 1
-                    local waitRemainder = Lerp(value, normalTimeWrite, normalTimePage, 0, 1)
-                    self.mState = eTypedTextState.Wait
-                    self.mWaitCounter = self:PagePause() * waitRemainder
-
-                    if doEvents then
-                        self.mSequenceList[k]:FireScriptsInRange(0, 1)
-                    end
-                else
-                    remainder = Lerp(value, normalTimePrev, normalTimeWrite, 0, 1)
-                    self.mState = eTypedTextState.Write
-
-                    if doEvents then
-                        self.mSequenceList[k]:FireScriptsInRange(0, remainder)
-                         self.mSequenceList[k]:ResetScriptsInRange(remainder, 1)
-                    end
-
-                end
-                jumpDone = true
+            if value > normalTimeWrite then
+                -- We've finished writing and we're waiting
+                remainder = 1
+                local waitRemainder = Lerp(value, normalTimeWrite, normalTimePage, 0, 1)
+                self.mState = eTypedTextState.Wait
+                self.mWaitCounter = self:PagePause() * waitRemainder
             else
-                if doEvents then
-                    self.mSequenceList[k]:FireScriptsInRange(0, 1)
-                end
+                remainder = Lerp(value, normalTimePrev, normalTimeWrite, 0, 1)
+                self.mState = eTypedTextState.Write
             end
-
-            trackTime = trackTime + pageDuration
-            normalTimePrev = normalTimePage
+            break
         end
+
+        trackTime = trackTime + pageDuration
+        normalTimePrev = normalTimePage
     end
 
 
@@ -398,21 +307,6 @@ function TypedText:JumpTo01(value, doEvents)
     local writeDuration = self:CalcPageDuration(suggestedIndex)
     self.mPageTween = Tween:Create(0, 1, writeDuration)
     self.mPageTween:SetValue01(remainder)
-
-
-    -- Update prev page index - can jump backwards and forwards
-    -- if jumped backwards then set values to that
-    -- if jumped forward leave
-
-
-
-
-    if self.mPrevPageIndex > self.mPageIndex then
-        self.mPrevPageIndex = self.mPrevPageIndex
-        if self.mPrevPage01 > self.mPageTween:Value() then
-            self.mPrevPage01 = self.mPageTween:Value()
-        end
-    end
 
 end
 
@@ -435,13 +329,6 @@ function TypedText:Advance()
     if self.mState == eTypedTextState.Write then
         print("ERROR: Called advance in write state. (This should skip)")
     end
-
-    -- Fire events
-    local sequence = self.mSequenceList[self.mPageIndex]
-    sequence:FireScriptsInRange(self.mPrevPage01, 1)
-    self.mPrevPageIndex = self.mPageIndex
-    self.mPrevPage01 = 0
-
 
     self.mPageIndex = self.mPageIndex + 1
     local nextPage = self.mPageList[self.mPageIndex]

@@ -28,6 +28,5 @@ function TagScript:Exit()
 end
 
 function TagScript:Reset()
-    print("Reset called")
     self.mFired = false
 end

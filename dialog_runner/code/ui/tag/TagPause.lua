@@ -22,6 +22,6 @@ function TagPause:Exit()
 
 end
 
-function TagPause:Reset()
+function TagScript:Reset()
 
 end

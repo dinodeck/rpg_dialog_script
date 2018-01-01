@@ -85,8 +85,8 @@ function TextboxClip:GenerateBoxedTime()
     return box
 end
 
-function TextboxClip:JumpTo01(value, doEvents)
-    self.mTextbox:JumpTo01(value, doEvents)
+function TextboxClip:JumpTo01(value)
+    self.mTextbox:JumpTo01(value)
 end
 
 function TextboxClip:OnWaitToAdvance()
