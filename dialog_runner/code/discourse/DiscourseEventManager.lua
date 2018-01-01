@@ -29,6 +29,11 @@ end
 
 function DiscourseEventManager:Jump01(prev01, now01)
 
+    -- print(prev01, now01)
+    -- print("V")
+    -- print(debug.traceback())
+    -- print("")
+
     local eventsToRun = {}
 
     -- same or previous does not fire any events
@@ -40,6 +45,13 @@ function DiscourseEventManager:Jump01(prev01, now01)
     for k, v in ipairs(self.mEventList) do
         if v.position > prev01 and v.position <= now01 then
             table.insert(eventsToRun, v)
+        end
+    end
+
+    if next(eventsToRun) then
+        print("Ran some events")
+        for k,v in ipairs(eventsToRun) do
+            print(k, v.position)
         end
     end
 

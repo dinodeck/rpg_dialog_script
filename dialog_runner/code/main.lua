@@ -92,13 +92,6 @@ stopButton:SetPosition(0 + 16 + buttonPad, gTrackBar:Bottom() - 24)
 
 gIndicator:SetColor(Vector.Create(0.5,0.5,0.5,1))
 
--- Event Manager
-gEventManager = DiscourseEventManager:Create()
-gEventManager:AddEvent(0.5)
-gEventManager:AddEvent(0.75)
-gEventManager:AddEvent(0.2)
--- End Event
-
 FixedSequence = {}
 FixedSequence.__index = FixedSequence
 function FixedSequence:Create()
@@ -107,7 +100,14 @@ function FixedSequence:Create()
         mTimeline = {},
         mClipIndex = 1,
         mRuntime = 0, -- tracks how long the sequence has run for
+        mEventManager = DiscourseEventManager:Create(),
+        mPrevValue01 = 0
     }
+
+    -- Testing
+    this.mEventManager:AddEvent(0.5)
+    this.mEventManager:AddEvent(0.75)
+    this.mEventManager:AddEvent(0.2)
 
     setmetatable(this, self)
     return this
@@ -153,6 +153,8 @@ function FixedSequence:JumpTo01(value)
         end
     end
 
+    self.mEventManager:Jump01(self.mPrevValue01, value)
+    self.mPrevValue01 = value
 end
 
 function FixedSequence:Duration()
@@ -173,14 +175,14 @@ end
 -- Each clip needs:
 --     Update
 --     Render
---     JumpTo01
+--     Jump01
 --     Duration
 --
 function FixedSequence:AddClip(clip)
     table.insert(self.mTimeline, clip)
 end
 
-function FixedSequence:Update(dt)
+function FixedSequence:Update(dt, value01)
 
     local dt = dt or GetDeltaTime()
     self.mRuntime = self.mRuntime + dt
@@ -195,6 +197,10 @@ function FixedSequence:Update(dt)
     -- end
 
     clip:Update(dt)
+
+
+    self.mEventManager:Jump01(self.mPrevValue01, value01)
+    self.mPrevValue01 = value01
 
 end
 
@@ -217,9 +223,10 @@ function FixedSequence:RuntimeToClipIndex()
     -- time and subtract that
 end
 
-function FixedSequence:Render(renderer)
+function FixedSequence:Render(renderer, trackbar)
     local clip = self.mTimeline[self.mClipIndex]
     clip:Render(renderer)
+    self.mEventManager:Render(gRenderer, trackbar)
 end
 
 function RawTagsToLookUp(tags)
@@ -357,7 +364,7 @@ function RenderConversation()
         x = x + w
     end
 
-    gConversation.sequence:Render(gRenderer)
+    gConversation.sequence:Render(gRenderer, gTrackBar)
 end
 
 function DrawEntry(x, y, w, entry, c)
@@ -526,7 +533,7 @@ function update()
     if playButton:IsOn() then
         trackingTween:Update()
         gTrackBar:SetValue01(trackingTween:Value())
-        gConversation.sequence:Update()
+        gConversation.sequence:Update(GetDeltaTime(), trackingTween:Value())
 
         if trackingTween:IsFinished() then
             gPlayController:DoAtEnd()
@@ -563,8 +570,6 @@ function update()
         end
     end
 
-    gEventManager:Render(gRenderer, gTrackBar)
-
     gRenderer:DrawSprite(gIndicator)
     local loadX = screenW + 32
     local loadY = 156
@@ -578,7 +583,7 @@ function update()
         gGhostTrack:SetPosition(cPos:X(), gTrackBar:Y())
         gRenderer:DrawSprite(gGhostTrack)
 
-        if Mouse.Held(MOUSE_BUTTON_LEFT) then
+        if Mouse.Held(MOUSE_BUTTON_LEFT) or Mouse.JustReleased(MOUSE_BUTTON_LEFT)  then
             local v = Lerp(cPos:X(), gTrackBar:LeftTrimmed(), gTrackBar:RightTrimmed(), 0, 1)
             JumpTo01(v)
         end
