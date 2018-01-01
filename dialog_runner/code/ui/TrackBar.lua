@@ -50,6 +50,10 @@ function TrackBar:SetValue01(value)
     self.mValue = value
 end
 
+function TrackBar:Value()
+    return self.mValue
+end
+
 function TrackBar:Left()
  return self.mX - self.mWidth * 0.5
 end

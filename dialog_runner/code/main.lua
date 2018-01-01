@@ -92,6 +92,43 @@ stopButton:SetPosition(0 + 16 + buttonPad, gTrackBar:Bottom() - 24)
 
 gIndicator:SetColor(Vector.Create(0.5,0.5,0.5,1))
 
+-- Event Manager
+EventManager = {}
+EventManager.__index = EventManager
+
+function EventManager:Create()
+    local this =
+    {
+        mEventList = {}
+    }
+    setmetatable(this, self)
+    return this
+end
+
+function EventManager:Render(renderer, trackbar)
+
+    local value = trackbar:Value()
+    local left = trackbar:Left()
+    local right = trackbar:Right()
+
+    for k, v in ipairs(self.mEventList) do
+        trackbar:DrawEvent(renderer, v.position, v.position > value)
+    end
+
+end
+
+function EventManager:AddEvent(v01)
+    -- Yes, this should be ordered really.
+    table.insert(self.mEventList, {position = v01})
+end
+
+gEventManager = EventManager:Create()
+gEventManager:AddEvent(0.5)
+gEventManager:AddEvent(0.75)
+gEventManager:AddEvent(0.2)
+
+-- End Event
+
 FixedSequence = {}
 FixedSequence.__index = FixedSequence
 function FixedSequence:Create()
@@ -556,7 +593,7 @@ function update()
         end
     end
 
-    gTrackBar:DrawEvent(gRenderer, 0.0, false)
+    gEventManager:Render(gRenderer, gTrackBar)
 
     gRenderer:DrawSprite(gIndicator)
     local loadX = screenW + 32
