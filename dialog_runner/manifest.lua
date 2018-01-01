@@ -167,6 +167,11 @@ manifest =
             path = "time_box.png",
             scale = "pixelart"
         },
+        ['event.png'] =
+        {
+            path = "event.png",
+            scale = "pixelart"
+        },
     },
     ['fonts'] =
     {

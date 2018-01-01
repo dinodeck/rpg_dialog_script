@@ -11,6 +11,11 @@ function TrackBar:Create(params)
         mBarTexture = params.texture,
         mThumb = Sprite.Create(),
         mThumbTexture = params.thumbTexture,
+
+        -- Event Marker stuff
+        mEventMarker = Sprite:Create(),
+        mColorEventRun = RGB(168,168,168), --simple grey
+        mColorEventReady = RGB(83, 219, 43),
     }
 
     this.mThumb:SetTexture(this.mThumbTexture)
@@ -28,6 +33,9 @@ function TrackBar:Create(params)
     -- up to the edge if it's a rounded
     -- background
     this.mTrackTrim = panelPieceSize
+
+    -- Event marker stuff, VIEW layer only
+    this.mEventMarker:SetTexture(Texture.Find("event.png"))
 
     setmetatable(this, self)
     this:SetPostion(this.mX, this.mY)
@@ -81,3 +89,19 @@ function TrackBar:Render(renderer)
     self.mPanel:Render(renderer)
     renderer:DrawSprite(self.mThumb)
 end
+
+function TrackBar:DrawEvent(renderer, v01, hasRun)
+    if hasRun then
+        self.mEventMarker:SetColor(self.mColorEventRun)
+    else
+        self.mEventMarker:SetColor(self.mColorEventReady)
+    end
+
+    local x = Lerp(v01, 0, 1, self:LeftTrimmed(), self:RightTrimmed())
+    local y = self.mY + 32
+
+    self.mEventMarker:SetPosition(x, y)
+
+    renderer:DrawSprite(self.mEventMarker)
+end
+--

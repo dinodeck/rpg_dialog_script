@@ -556,6 +556,8 @@ function update()
         end
     end
 
+    gTrackBar:DrawEvent(gRenderer, 0.0, false)
+
     gRenderer:DrawSprite(gIndicator)
     local loadX = screenW + 32
     local loadY = 156
