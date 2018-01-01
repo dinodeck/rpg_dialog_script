@@ -93,23 +93,27 @@ manifest =
         },
         ['TagColor.lua'] =
         {
-            path = "code/ui/tag/TagColor.lua"
+            path = "code/discourse/tag/TagColor.lua"
         },
         ['TagPause.lua'] =
         {
-            path = "code/ui/tag/TagPause.lua"
+            path = "code/discourse/tag/TagPause.lua"
         },
         ['TagSpeed.lua'] =
         {
-            path = "code/ui/tag/TagSpeed.lua"
+            path = "code/discourse/tag/TagSpeed.lua"
         },
         ['TagScript.lua'] =
         {
-            path = "code/ui/tag/TagScript.lua"
+            path = "code/discourse/tag/TagScript.lua"
         },
         ['TagDB.lua'] =
         {
             path = "code/TagDB.lua"
+        },
+        ['DiscourseEventManager.lua'] =
+        {
+            path = "code/discourse/DiscourseEventManager.lua"
         }
     },
     textures =
