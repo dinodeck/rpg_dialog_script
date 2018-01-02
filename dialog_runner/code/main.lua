@@ -127,6 +127,8 @@ end
 
 function FixedSequence:JumpTo01(value)
 
+    -- printf("FixedSequence Jump01: %.2f -> %.2f  %.3f", self.mPrevValue01, value, GetDeltaTime())
+
     -- Need to find the clip, then how much we're into the clip
     -- and tell it to jump to that point
     self.mRuntime = self:CalcDuration() * value
@@ -421,9 +423,12 @@ function JumpTrackBar(v)
     trackingTween:SetValue01(v)
 end
 
+
+
 function JumpTo01(value)
     if gConversation then
-        stopButton:OnClick()
+        playButton:TurnOff()
+        stopButton:TurnOn()
         gConversation.sequence:JumpTo01(value)
         JumpTrackBar(value)
         gTrackBar:SetValue01(value)
